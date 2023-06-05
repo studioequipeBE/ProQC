@@ -64,22 +64,23 @@ def Start(fichier, duree, timecodestart= "00:00:00:00", framerate= "24", ratio= 
             file_.write("Timecode debut: " + str(timecodestart) + "\n");
         except:
             file_.write("Timecode debut: inconnu\n");
-        file_.write("Framerate: " + str(framerate) + " i/s\n")
+        file_.write("Framerate : " + str(framerate) + " i/s\n")
+        file_.write("Ratio : " + str(ratio) + "\n")
     # Si on écrit un fichier HTML:
     elif type_ == "html":
-        file_.write("<p><strong>Fichier:</strong> " + fichier + "</p>\n")
-        file_.write("<p><strong>Ratio:</strong> " + ratio + "</p>\n")
-        file_.write("<p><strong>Duree:</strong> " + str(duree) + " image(s) (TC " + tc.frames_to_timecode(int(duree), framerateG) + ")</p>\n")
+        file_.write("<p><strong>Fichier :</strong> " + fichier + "</p>\n")
+        file_.write("<p><strong>Duree :</strong> " + str(duree) + " image(s) (TC " + tc.frames_to_timecode(int(duree), framerateG) + ")</p>\n")
 
         # Parfois l'affichage du TC bug quand le fichier vient du réseau.
         try:
             tc_debut= int(Timecode(framerate, timecodestart).frames - 1)
             # print "TC debut: " + str(tc_debut)
-            file_.write("<p><strong>Timecode debut:</strong> " + str(timecodestart) + " (" + str(tc_debut) + ")</p>\n");
+            file_.write("<p><strong>Timecode debut :</strong> " + str(timecodestart) + " (" + str(tc_debut) + ")</p>\n");
         except:
-            file_.write("<p><strong>Timecode debut:</strong> <i>inconnu</i></p>\n");
+            file_.write("<p><strong>Timecode debut :</strong> <i>inconnu</i></p>\n");
 
-        file_.write("<p><strong>Framerate</strong>: " + str(framerate) + " i/s</p>\n")
+        file_.write("<p><strong>Framerate :</strong> " + str(framerate) + " i/s</p>\n")
+        file_.write("<p><strong>Ratio :</strong> " + str(ratio) + "<p>\n")
         file_.write("<table class= \"bord\">\n")
         file_.write("<tr><th class= \"bord\">n°</th><th class= \"bord\">TC IN</th><th class= \"bord\">TC OUT</th><th class= \"bord\">REMARK</th><th class= \"bord\">OPTION</th></tr>\n")
 
