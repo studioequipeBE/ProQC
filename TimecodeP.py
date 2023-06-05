@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*
+# -*- coding: utf-8 -*
 
 # Copyright (c) 2016 Shotgun Software Inc.
 # 
@@ -15,7 +15,7 @@
 
 # == FONCTIONS ==
 
-def frames_to_timecode(total_frames, frame_rate= 24, drop= False):
+def frames_to_timecode(total_frames, frame_rate=24, drop=False):
     """
     Method that converts frames to SMPTE timecode.
     
