@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*
 
-# Fichier: Permet de choisir (graphiquement) le ratio a analyser.
+# Fichier: Permet de choisir (graphiquement) le framerate.
 # Version: 0.1
 
 # == IMPORTS ==
@@ -10,36 +10,33 @@ try:
 except ImportError:
     from tkinter import *
 
-import Pmw          
+import Pmw
+import bdd
 
-# == FONCTIONS ==
-
-# Valeur choisie.
-def getFramerate():
-    return str(framerate)
-
-# Fermer la fenêtre.
-def quitter(text):
-    global fen, framerate
-    framerate= text
-    fen.quit()
-    fen.destroy()
+bdd.Open()
 
 framerate= None
 
-# Définit les couleurs.
-couleurs= ('24', '25', '23,978')
+# == FONCTIONS ==
+def Quitter():
+    global codec, fen
+    framerate= combo.get()
+    fen.quit()
+    fen.destroy()
 
-# On créé la fenêtre:
-fen= Pmw.initialise()
+liste_codec = (bdd.ConvertTab(bdd.Select("liste_cadence", "cadence"))) # Ce qu'il retourne n'est pas un vrai tableau
 
-# L'objet de liste:
-combo= Pmw.ComboBox(fen, labelpos= NW,
-                     label_text= 'Choisissez le framerate :',
-                     scrolledlist_items= couleurs,
-                     listheight= 60, #15 par élément. + 15 de base
-                     selectioncommand= quitter)
-combo.grid(row= 2, columnspan= 2, padx= 10, pady= 10)
+fen = Pmw.initialise()
+bou = Button(fen, text= "Valider", command= Quitter)
+bou.focus_set()
+bou.grid(row =1, column =0, padx =8, pady =6)
 
-# Ecouteur sur la fenêtre:
+combo = Pmw.ComboBox(fen, labelpos = NW,
+                     label_text = 'Choisissez le framerate :',
+                     scrolledlist_items = liste_codec,
+                     listheight = 150)
+combo.grid(row =2, columnspan =2, padx =10, pady =10)
+
 fen.mainloop()
+
+bdd.close()
