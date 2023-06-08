@@ -2,26 +2,29 @@
 # -*- coding: utf-8 -*-
 
 # == IMPORTS ==
+import locale
 import socket
 import struct
 import time
-
-import locale
 
 locale.setlocale(locale.LC_TIME, '')
 
 
 # == FONCTIONS ==
+def aujourdhui(sntp='ntp.univ-lyon1.fr') -> int:
+    """"
+    Retourne la date d'aujourd'hui.
 
-def Aujourdhui(sntp='ntp.univ-lyon1.fr'):
+    :param str sntp: Le serveur où regarder.
+    :returns: Date d'aujourd'hui en nombre.
+    """
     try:
         """tempsntp(sntp='ntp.univ-lyon1.fr'): Donne la date et l'heure exacte par consultation d'un serveur ntp"""
-        jsem = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
         temps19701900 = 2208988800
         buffer = 1024
-        # initialisation d'une connexion UDP
+        # Initialisation d'une connexion UDP.
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # envoie de la requête UDP
+        # Envoie de la requête UDP.
         data = '\x1b' + 47 * '\0'
         client.sendto(data, (sntp, 123))
         # réception de la réponse UDP
@@ -30,13 +33,12 @@ def Aujourdhui(sntp='ntp.univ-lyon1.fr'):
             tps = struct.unpack('!12I', data)[10]
             tps -= temps19701900
             t = time.localtime(tps)
-            # Retourne la date structuré: JJ/MM/AAAA
-            # ch=str(t[2]).zfill(2)+'/'+str(t[1]).zfill(2)+'/'+str(t[0]).zfill(4)
-            # return ch
 
-            # Retourne la date en: AAAAMMJJ ce qui fait un chiffre facilement analysable.
-            return str(t[0]).zfill(4) + str(t[1]).zfill(2) + str(t[2]).zfill(2)
+            # Retourne la date en : AAAAMMJJ ce qui fait un chiffre facilement analysable.
+            return int(str(t[0]).zfill(4) + str(t[1]).zfill(2) + str(t[2]).zfill(2))
         else:
-            return 20200000
+            print('Erreur : Aucune données récupérées du serveur.')
+            return 20230101
     except:
-        return 20200000
+        print('Erreur lors de l\'accès au serveur.')
+        return 20230101

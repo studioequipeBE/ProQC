@@ -1,51 +1,58 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier: Permet de choisir (graphiquement) le ration a analyser.
-# Version: 0.1
+# Fichier : Permet de choisir (graphiquement) le framerate à analyser.
 
 # == IMPORTS ==
 
-# Essaie d'importer les fichiers necessaires au programme:
+# Essaie d'importer les fichiers nécessaires au programme :
 try:
     from Tkinter import *
     from tkFileDialog import askopenfilename
 
-# Sinon, il essai d'importer les mêmes mais en Python 3.
+# Sinon, il essaie d'importer les mêmes, mais en Python 3.
 except ImportError:
     from tkinter import *
     from tkinter.filedialog import askopenfilename
 
+root = Tk()
+entry = Entry(root)
+framerate = None
+
 
 # == FONCTIONS ==
+def getFramerate() -> str:
+    """
+    Retourne le framerate.
 
-def getFramerate():
-    return str(framerate)
+    :returns: Le framerate.
+    """
+    return framerate
 
 
-def quitter():
+def quitter() -> None:
+    """
+    Quand on ferme la fenêtre.
+    """
     global root, framerate
-    framerate = entry.get()
+    framerate = str(entry.get())
     root.quit()
     root.destroy()
 
 
-root = Tk()
+def fenetre() -> None:
+    """
+    Affiche la fenêtre.
+    """
+    global root, entry
+    # Affiche le nom du fichier sélectionner (remplacer par un message : "Choisissez le fichier à analyser").
+    entry.insert(0, '24')
+    entry.focus_set()
+    entry.pack()
 
-framerate = None
+    # Bouton pour choisir le fichier :
+    button = Button(root, text='Valider le framerate', command=quitter)
+    button.pack()
 
-# L1 = Label(root, text="Ratio")
-# L1.pack(side= LEFT)
-
-# Affiche le nom du fichier sélectionner (remplacer par un message: "Choisisez le fichier à analyser")
-entry = Entry(root)
-entry.insert(0, "24")
-entry.focus_set()
-entry.pack()
-
-# Bouton pour choisir le fichier:
-button = Button(root, text='Valider le framerate', command=quitter)
-button.pack()
-
-# Ecouteur sur la fenêtre:
-root.mainloop()
+    # Écouteur sur la fenêtre :
+    root.mainloop()

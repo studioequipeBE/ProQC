@@ -15,13 +15,13 @@
 
 # == FONCTIONS ==
 
-def frames_to_timecode(total_frames, frame_rate=24, drop=False):
+def frames_to_timecode(total_frames: int, frame_rate: int = 24, drop: bool = False) -> str:
     """
     Method that converts frames to SMPTE timecode.
     
-    :param total_frames: Number of frames
-    :param frame_rate: frames per second
-    :param drop: true if time code should drop frames, false if not
+    :param int total_frames: Number of frames.
+    :param int frame_rate: frames per second.
+    :param bool drop: true if time code should drop frames, false if not
     :returns: SMPTE timecode as string, e.g. '01:02:12:32' or '01:02:12;32'
     """
     if drop and frame_rate not in [29.97, 59.94]:

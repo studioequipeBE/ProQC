@@ -15,8 +15,8 @@ except ImportError:
     from tkinter import *
     from tkinter.filedialog import askopenfilename
 
-# Propose d'abord Pro Res puis H264.
-FILETYPES = [('Quicktime', '*.mov'), ('PAD MXF', '*.mxf'), ('H264', '*.mp4'), ('AVI', '*.avi')]
+# Propose que du wave
+FILETYPES = [('WAV', '*.wav')]
 
 root = Tk()
 
@@ -25,7 +25,7 @@ filename = StringVar(root)
 
 def setFilename() -> None:
     """
-    Définit le nom du fichier.
+    Définit le fichier.
     """
     global root, filename
     filename.set(askopenfilename(filetypes=FILETYPES))
