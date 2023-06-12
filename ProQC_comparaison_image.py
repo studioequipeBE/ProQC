@@ -6,23 +6,24 @@
 # == IMPORTS ==
 import imageio
 import numpy as np
-import subprocess as sp
-import timecode as Timecode
+import os
 
-import ChoixFichier as cf  # Programme qui choisi le fichier a analyser.
-import ChoixFichier as cf2  # Programme qui choisi le fichier a analyser.
-import ChoixFramerateListe as cfr
+from ChoixFichier import ChoixFichier
+import fonctions as fct
 import Rapport as r
 import ServeurDate as date
-import TimecodeP as tc
+
+ffmpeg = 'C:\\ffmpeg\\ffmpeg.exe'
+
+os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
 
 # Si on peut utiliser le programme
 licence = None
 
-# Se connecte pour voir si on depasse la limite d'utilisation du programme:
-if int(date.aujourdhui()) <= 20201025:
+# Se connecte pour voir si on dépasse la limite d'utilisation du programme :
+if int(date.aujourdhui()) <= 20230101:
     print('Licence OK')
     licence = True
 else:
@@ -35,10 +36,6 @@ ratio = None
 starttc = None
 starttc_frame = 0
 endtc_frame = None
-
-# Définit à quelle ligne commence l'image utile (en fonction de son ratio).
-y_debut_haut = None  # 1ère ligne utile vers le haut.
-y_debut_bas = None  # 1ère ligne utile vers le bas.
 
 framerate = None
 
@@ -58,23 +55,6 @@ num_erreur = 0
 
 
 # == FONCTIONS ==
-def tcActuel(num_image: int, framerate: int = 24) -> str:
-    """
-    Donne le TC actuel à l'aide d'un nombre d'images et sur base d'un tc de départ.
-
-    :param int num_image: Numéro d'image.
-    :param int framerate: Framerate.
-    """
-    tc1 = Timecode(framerate, starttc)
-    if num_image > 0:
-        # Comme le résultat est toujours une image en trop, j'enlève ce qu'il faut : :)
-        tc2 = Timecode(framerate, tc.frames_to_timecode((num_image - 1), framerate))
-        tc3 = tc1 + tc2
-        return tc3
-    else:
-        return tc1
-
-
 def updateListeProbleme(num_image: int) -> None:
     """
     Met à jour la liste des erreurs pour écrire dans le rapport.
@@ -90,9 +70,9 @@ def updateListeProbleme(num_image: int) -> None:
             print(str(num_erreur) + ' / ' + str(list_tc_in[i]) + " : update liste, on ajoute une erreur!")
             # On écrit dans le rapport l'erreur :
 
-            # La notion de temps en timecode
+            # La notion de temps en timecode.
             # r.setRapport(str(TcActuel(list_tc_in[i], framerate)) + " a " + str(TcActuel(list_tc_out[i], framerate)) + ": " + str(list_erreur[i]) + "\n")
-            # La notion de temps en image
+            # La notion de temps en image.
             # r.setRapport(str(int(list_tc_in[i])) + " a " + str(int(list_tc_out[i])) + ": " + str(list_erreur[i]) + "\n")
             r.addProbleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]), str(liste_option[i]))
 
@@ -132,25 +112,6 @@ def addProbleme(message, option, num_image) -> None:
         list_tc_out = np.append(list_tc_out, num_image)
         liste_option = np.append(liste_option, option)
         list_erreur = np.append(list_erreur, message)
-
-
-def startTimeCodeFile(fichier: str) -> str:
-    """
-    Timecode du fichier analyse.
-
-    :param str fichier: Le fichier.
-    """
-    global starttc
-    command = ['ffmpeg.exe', '-i', fichier, '-']
-    pipe = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
-    pipe.stdout.readline()
-    pipe.terminate()
-    infos = pipe.stderr.read()
-    tc = ''
-    for i in range(18, 29):
-        tc += infos[(infos.find('timecode') + i)]
-    starttc = tc
-    return tc
 
 
 delta = 0.01  # Delta qu'on tolère entre 2 images.
@@ -221,19 +182,25 @@ def close() -> None:
 # On ne lance le programme que si la licence est OK.
 if licence:
     # Fichier 1:
-    cf.fenetre()
-    fichier = cf.filename.get()
+    cf = ChoixFichier()
+    cf.show()
+    fichier = cf.getFilename()
     print('fichier 1: ' + fichier)
-    print('- Start tc: ' + startTimeCodeFile(fichier))
+
+    start_tc = fct.startTimeCodeFile(ffmpeg, fichier)
+
+    print('- Start tc: ' + start_tc)
 
     # Image quoi ? RGB/NB??? En fait, cette information est importante...
     reader = imageio.get_reader(fichier, ffmpeg_params=['-an'])
 
-    framerate = int(cfr.getFramerate())
+    framerate = int(reader.get_meta_data()['fps'])
 
     print('- Framerate: ' + str(framerate))
 
-    duree = reader.get_length()
+    duree_seconde = str(reader.get_meta_data()['duration']).split('.')
+
+    duree = int(duree_seconde[0]) * framerate + int((int(duree_seconde[1]) / 100) * framerate)
 
     endtc_frame = duree - 1
 
@@ -242,22 +209,21 @@ if licence:
     endtc_frame = endtc_frame
 
     # Note: [-1] = dernier element de la liste.
-    r.rapport(fichier.split('/')[-1], 'html')
+    r.rapport(fichier.split('/')[-1], True, 'bdd')
 
-    # r.setRapport("== Debut du rapport ==\n")
-
-    r.start(fichier, str(duree), str(startTimeCodeFile(fichier)), str(framerate))
+    r.setInformations(duree, start_tc, framerate)
 
     # Fichier 2:
-    cf2.fenetre()
-    fichier2 = cf2.filename.get()
+    cf2 = ChoixFichier()
+    cf2.show()
+    fichier2 = cf2.getFilename()
     print('fichier 2: ' + fichier2)
-    print('- Start tc: ' + startTimeCodeFile(fichier2))
+    print('- Start tc: ' + fct.startTimeCodeFile(ffmpeg, fichier2))
 
     # Image quoi ? RGB/NB??? En fait, cette information est importante...
     reader2 = imageio.get_reader(fichier2, ffmpeg_params=['-an'])
 
-    framerate2 = int(cfr.getFramerate())
+    framerate2 = int(reader2.get_meta_data()['fps'])
 
     print('- Framerate: ' + str(framerate))
 
@@ -272,7 +238,7 @@ if licence:
 
         image2 = reader2.get_data(i)  # Récupère l'image suivante de reader2 (image 2).
 
-        # Met a jout la liste des erreurs (pour avoir un groupe de tc pour une erreur):
+        # Met à jour la liste des erreurs (pour avoir un groupe de tc pour une erreur):
         updateListeProbleme(i)
 
         # Affiche l'avancement tous les 30 secondes :
@@ -280,8 +246,8 @@ if licence:
             print(str(i) + ' / ' + str(duree))
 
         if not identique(image, image2):
-            addProbleme('Pas les mêmes image..', str(option_afficher), i)
+            addProbleme('Pas les mêmes image.', str(option_afficher), i)
 
 close()
-
+print('Fin analyse.')
 # == END ==

@@ -6,6 +6,7 @@
 # == IMPORTS ==
 import imageio
 import numpy as np
+import os
 import subprocess as sp
 import timecode as Timecode
 
@@ -13,9 +14,14 @@ import ChoixFichier as cf  # Programme qui choisi le fichier à analyser.
 import ChoixFramerateListe as cfr
 import ChoixRatioListe as cr
 import ChoixResolutionListe as cre
+import fonctions as fct
 import ServeurDate as date
 import Rapport as r
 import TimecodeP as tc
+
+ffmpeg = 'C:\\ffmpeg\\ffmpeg.exe'
+
+os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
 
@@ -71,23 +77,6 @@ delta_max = 1 + delta  # Delta max
 
 
 # == FONCTIONS ==
-def tcActuel(num_image: int, framerate: int = 24) -> str:
-    """
-    Donne le TC actuel à l'aide d'un nombre d'images et sur base d'un tc de départ.
-
-    :param num_image: Numéro d'image.
-    :param framerate: Le framerate.
-    """
-    tc1 = Timecode(framerate, starttc)
-    if num_image > 0:
-        # Comme le résultat est toujours une image en trop, j'enleve ce qu'il faut: :)
-        tc2 = Timecode(framerate, tc.frames_to_timecode((num_image - 1), framerate))
-        tc3 = tc1 + tc2
-        return tc3
-    else:
-        return tc1
-
-
 def updateListeProbleme(num_image: int) -> None:
     """
     Met à jour la liste des erreurs pour écrire dans le rapport.
@@ -144,25 +133,6 @@ def addProbleme(message: str, option: str, num_image: int) -> None:
         list_tc_out = np.append(list_tc_out, num_image)
         liste_option = np.append(liste_option, option)
         list_erreur = np.append(list_erreur, message)
-
-
-def startTimeCodeFile(fichier: str) -> str:
-    """
-    Timecode du fichier analyse.
-
-    :param str fichier : Le fichier.
-    """
-    global starttc
-    command = ['ffmpeg.exe', '-i', fichier, '-']
-    pipe = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
-    pipe.stdout.readline()
-    pipe.terminate()
-    infos = pipe.stderr.read()
-    tc = ''
-    for i in range(18, 29):
-        tc += infos[(infos.find('timecode') + i)]
-    starttc = tc
-    return tc
 
 
 def setRatio(ratio_tmp, resolution_tmp) -> None:
@@ -393,7 +363,7 @@ i_global = 0
 if licence:
     fichier = cf.filename.get()
     print('fichier: ' + str(fichier))
-    print('Start tc: ' + str(startTimeCodeFile(fichier)))
+    print('Start tc: ' + str(fct.startTimeCodeFile(ffmpeg, fichier)))
 
     # Image quoi ? RGB/NB??? En fait, cette information est importante...
     reader = imageio.get_reader(fichier, ffmpeg_params=['-an'])
@@ -428,7 +398,7 @@ if licence:
     starttc_frame = starttc_frame
     endtc_frame = endtc_frame
 
-    r.Start(fichier, str(duree), str(startTimeCodeFile(fichier)), framerate, str(ratio))
+    r.Start(fichier, str(duree), str(fct.startTimeCodeFile(ffmpeg, fichier)), framerate, str(ratio))
 
     # Chaque iteration équivaut à une image :
     for i, image in enumerate(reader):

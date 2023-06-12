@@ -6,14 +6,8 @@
 # == IMPORTS ==
 
 # Essaie d'importer les fichiers nécessaires au programme :
-try:
-    from Tkinter import *
-    from tkFileDialog import askopenfilename
-
-# Sinon, il essaie d'importer les mêmes, mais en Python 3.
-except ImportError:
-    from tkinter import *
-    from tkinter.filedialog import askopenfilename
+from tkinter import *
+from tkinter.filedialog import askopenfilename
 
 root = Tk()
 entry = Entry(root)

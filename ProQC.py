@@ -6,16 +6,18 @@
 # == IMPORTS ==
 import imageio
 import numpy as np
-import subprocess as sp
-import timecode as Timecode
 
-import ChoixFichier as cf  # Programme qui choisi le fichier à analyser.
+import ChoixFichier  # Programme qui choisi le fichier à analyser.
 import ChoixFramerate as cfr
 import ChoixRatio as cr
 import ChoixTC as ctc  # Programme qui choisi l'intervalle à analyser.
+import fonctions as fct
 import Rapport as r
 import ServeurDate as date
-import TimecodeP as tc
+
+ffmpeg = 'C:\\ffmpeg\\ffmpeg.exe'
+
+os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
 
@@ -93,23 +95,6 @@ reader_MOLR.close()
 
 
 # == FONCTIONS ==
-def tcActuel(num_image: int, framerate: int = 24) -> str:
-    """
-    Donne le TC actuel à l'aide d'un nombre d'images et sur base d'un tc de départ.
-
-    :param int num_image: Numéro d'image.
-    :param int framerate: Framerate du TC.
-    """
-    tc1 = Timecode(framerate, starttc)
-    if num_image > 0:
-        # Comme le résultat est toujours une image en trop, j'enlève ce qu'il faut: :)
-        tc2 = Timecode(framerate, tc.frames_to_timecode((num_image - 1), framerate))
-        tc3 = tc1 + tc2
-        return tc3
-    else:
-        return tc1
-
-
 def updateListeProbleme(num_image) -> None:
     """
     Met à jour la liste des erreurs pour écrire dans le rapport.
@@ -159,25 +144,6 @@ def addProbleme(message: str, num_image: int) -> None:
         list_tc_in = np.append(list_tc_in, num_image)
         list_tc_out = np.append(list_tc_out, num_image)
         list_erreur = np.append(list_erreur, message)
-
-
-def startTimeCodeFile(fichier: str) -> str:
-    """
-    Timecode du fichier analyse.
-
-    :param str fichier: Fichier à analyser.
-    """
-    global starttc
-    command = ['ffmpeg.exe', '-i', fichier, '-']
-    pipe = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
-    pipe.stdout.readline()
-    pipe.terminate()
-    infos = pipe.stderr.read()
-    tc = ''
-    for i in range(18, 29):
-        tc += infos[(infos.find('timecode') + i)]
-    starttc = tc
-    return tc
 
 
 def setRatio(ratio_tmp: str) -> None:
@@ -367,7 +333,7 @@ def blankingHaut(image) -> bool:
         return True
 
 
-def BlankingBas(image) -> bool:
+def blankingBas(image) -> bool:
     """
     Vérifie les blanking bas.
     Prévu pour 2.39.
@@ -396,9 +362,10 @@ def close() -> None:
 # On ne lance le programme que si la licence est OK.
 if licence:
     # Note : Normalement décode du Pro Res 422HQ ! :)
-    fichier = cf.filename.get()
+    cf = ChoixFichier()
+    fichier = cf.getFilename()
     print('fichier: ' + fichier)
-    print('Start tc: ' + startTimeCodeFile(fichier))
+    print('Start tc: ' + fct.startTimeCodeFile(ffmpeg, fichier))
     reader = imageio.get_reader(fichier, ffmpeg_params=['-an'])
 
     framerate = int(cfr.getFramerate())
@@ -469,7 +436,7 @@ if licence:
             if ratio != '1.77':
                 if not blankingHaut(image):
                     addProbleme('Les blankings du haut ne sont pas noirs', i)
-                if not BlankingBas(image):
+                if not blankingBas(image):
                     addProbleme('Les blankings du bas ne sont pas noirs', i)
 
 close()

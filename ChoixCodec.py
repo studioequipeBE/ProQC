@@ -5,11 +5,7 @@
 
 # == IMPORTS ==
 import Pmw
-
-try:
-    from Tkinter import *
-except ImportError:
-    from tkinter import *
+from tkinter import *
 
 import bdd
 

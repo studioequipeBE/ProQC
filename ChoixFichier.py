@@ -1,46 +1,40 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Permet de choisir (graphiquement) le fichier à analyser.
-
 # == IMPORTS ==
-
-# Essaie d'importer les fichiers nécessaires au programme :
-try:
-    from Tkinter import *
-    from tkFileDialog import askopenfilename
-
-# Sinon, il essaie d'importer les mêmes, mais en Python 3.
-except ImportError:
-    from tkinter import *
-    from tkinter.filedialog import askopenfilename
-
-# Propose d'abord Pro Res puis H264.
-FILETYPES = [('Quicktime', '*.mov'), ('PAD MXF', '*.mxf'), ('H264', '*.mp4'), ('AVI', '*.avi')]
-
-root = Tk()
-
-filename = StringVar(root)
+from tkinter import *
+from tkinter.filedialog import askopenfilename
 
 
-def setFilename() -> None:
+class ChoixFichier:
     """
-    Définit le nom du fichier.
+    Permet de choisir (graphiquement) le fichier à analyser.
     """
-    global root, filename
-    filename.set(askopenfilename(filetypes=FILETYPES))
-    root.quit()
-    root.destroy()
 
+    def __init__(self):
+        # Propose d'abord Pro Res puis H264.
+        self.FILETYPES = [('Quicktime', '*.mov'), ('PAD MXF', '*.mxf'), ('H264', '*.mp4'), ('AVI', '*.avi')]
+        self.root = Tk()
+        self.filename = StringVar(self.root)
 
-def fenetre() -> None:
-    """
-    Affiche la fenêtre.
-    """
-    global root
-    # Bouton pour choisir le fichier :
-    button = Button(root, text='Choisir le fichier a analyser', command=setFilename)
-    button.pack()
+    def getFilename(self) -> str:
+        return self.filename.get()
 
-    # Écouteur sur la fenêtre :
-    root.mainloop()
+    def setFilename(self) -> None:
+        """
+        Définit le nom du fichier.
+        """
+        self.filename.set(askopenfilename(filetypes=self.FILETYPES))
+        self.root.quit()
+        self.root.destroy()
+
+    def show(self) -> None:
+        """
+        Affiche la fenêtre.
+        """
+        # Bouton pour choisir le fichier :
+        button = Button(self.root, text='Choisir le fichier a analyser', command=self.setFilename)
+        button.pack()
+
+        # Écouteur sur la fenêtre :
+        self.root.mainloop()

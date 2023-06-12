@@ -19,10 +19,6 @@ def connect() -> None:
     global cursor, conn
     conn = mysql.connector.connect(host='localhost', user='root', password='', database='rapport_qc')
     cursor = conn.cursor()
-    # cursor.execute("SELECT codec FROM liste_codec")
-    # rows = cursor.fetchall()
-    # for row in rows:
-    #    print format(row[0])
 
 
 def insert(table: str, colonnes: str, valeurs: str) -> None:
@@ -35,6 +31,27 @@ def insert(table: str, colonnes: str, valeurs: str) -> None:
     """
     global cursor
     cursor.execute('INSERT INTO ' + table + ' (' + colonnes + ') VALUES (' + valeurs + ')')
+    conn.commit()
+
+
+def addRapport(fichier: str) -> int:
+    """
+    Ajoute un rapport à la base de données.
+
+    :param str fichier: Le fichier à analyser.
+    """
+    global cursor
+    cursor.execute('INSERT INTO rapport_qc (fichier, date_creation) VALUES ("' + fichier + '", NOW())')
+    conn.commit()
+    cursor.execute('SELECT id FROM rapport_qc WHERE fichier = "' + fichier + '" ORDER BY id DESC')
+    # print(cursor.fetchall()[0])
+    return int(cursor.fetchall()[0][0])
+
+
+def addMessage(id_rapport: int, message: str) -> None:
+    global cursor
+    cursor.execute(
+        'INSERT INTO rapport_qc_message (id_rapport, message) VALUES (' + str(id_rapport) + ', "' + message + '")')
     conn.commit()
 
 

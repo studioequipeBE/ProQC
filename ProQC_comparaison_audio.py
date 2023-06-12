@@ -11,6 +11,7 @@ import timecode as Timecode
 import ChoixFichierAudio as cf  # Programme qui choisi le fichier à analyser.
 import ChoixFichierAudio as cf2  # Programme qui choisi le fichier à analyser.
 import ChoixFramerateListe as cfr  # On doit définir le framerate pour avoir un TC.
+import fonctions as fct
 import Rapport as r
 import ServeurDate as date
 import TimecodeP as tc
