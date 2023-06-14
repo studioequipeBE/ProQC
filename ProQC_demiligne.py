@@ -24,18 +24,6 @@ ffmpeg = 'C:\\ffmpeg\\ffmpeg.exe'
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
-
-# Si on peut utiliser le programme
-licence = None
-
-# Se connecte pour voir si on dépasse la limite d'utilisation du programme :
-if int(date.aujourdhui()) <= 20201225:
-    print('Licence OK')
-    licence = True
-else:
-    print('Licence depassee/!\\')
-    licence = False
-
 # == Declaration variables: ==
 ratio = None
 
@@ -360,7 +348,7 @@ i_global = 0
 
 # == MAIN ==
 # On ne lance le programme que si la licence est OK.
-if licence:
+if fct.licence():
     fichier = cf.filename.get()
     print('fichier: ' + str(fichier))
     print('Start tc: ' + str(fct.startTimeCodeFile(ffmpeg, fichier)))

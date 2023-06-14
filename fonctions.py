@@ -40,3 +40,17 @@ def startTimeCodeFile(ffmpeg: str, fichier: str) -> str:
     for i in range(18, 29):
         tc += infos[index + i]
     return tc
+
+
+def licence() -> bool:
+    import ServeurDate as date
+    """
+    Si on peut utiliser le programme.
+    """
+    # Se connecte pour voir si on dépasse la limite d'utilisation du programme :
+    if int(date.aujourdhui()) <= 20230101:
+        print('Licence OK')
+        return True
+    else:
+        print('Licence depassee/!\\')
+        return False

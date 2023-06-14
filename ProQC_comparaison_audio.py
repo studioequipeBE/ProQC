@@ -13,25 +13,11 @@ import ChoixFichierAudio as cf2  # Programme qui choisi le fichier à analyser.
 import ChoixFramerateListe as cfr  # On doit définir le framerate pour avoir un TC.
 import fonctions as fct
 import Rapport as r
-import ServeurDate as date
 import TimecodeP as tc
 
 # == VALEURS ==
 
-# Si on peut utiliser le programme
-licence = None
-
-# Se connecte pour voir si on dépasse la limite d'utilisation du programme :
-if int(date.aujourdhui()) <= 20201025:
-    print('Licence OK')
-    licence = True
-else:
-    print('Licence depassee/!\\')
-    licence = False
-
 # == Declaration variables: ==
-ratio = None
-
 starttc = None
 starttc_frame = 0
 endtc_frame = None
@@ -164,7 +150,7 @@ def close() -> None:
 
 # == MAIN ==
 # On ne lance le programme que si la licence est OK.
-if licence:
+if fct.licence():
     # Fichier 1:
     cf.fenetre()
     fichier = cf.filename.get()

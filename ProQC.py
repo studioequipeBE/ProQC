@@ -6,6 +6,7 @@
 # == IMPORTS ==
 import imageio
 import numpy as np
+import os
 
 import ChoixFichier  # Programme qui choisi le fichier à analyser.
 import ChoixFramerate as cfr
@@ -13,25 +14,12 @@ import ChoixRatio as cr
 import ChoixTC as ctc  # Programme qui choisi l'intervalle à analyser.
 import fonctions as fct
 import Rapport as r
-import ServeurDate as date
 
 ffmpeg = 'C:\\ffmpeg\\ffmpeg.exe'
 
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
-
-# Si on peut utiliser le programme
-licence = None
-
-# Se connecte pour voir si on dépasse la limite d'utilisation du programme :
-if int(date.aujourdhui()) <= 20181124:
-    print('Licence OK')
-    licence = True
-else:
-    print('Licence depassee/!\\')
-    licence = False
-
 # == Déclaration variables : ==
 ratio = None
 
@@ -360,7 +348,7 @@ def close() -> None:
 
 # == MAIN ==
 # On ne lance le programme que si la licence est OK.
-if licence:
+if fct.licence():
     # Note : Normalement décode du Pro Res 422HQ ! :)
     cf = ChoixFichier()
     fichier = cf.getFilename()
