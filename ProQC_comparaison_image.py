@@ -8,12 +8,20 @@ import hashlib
 import imageio
 import numpy as np
 import os
+import platform
 import xml.etree.ElementTree as xmlparser
 
 import fonctions as fct
 import RapportComparaison as r
 
-ffmpeg = 'C:\\ffmpeg\\ffmpeg.exe'
+ffmpeg = os.getcwd() + os.sep + 'modules' + os.sep
+match platform.system():
+    case 'Windows':
+        ffmpeg = ffmpeg + 'ffmpeg.exe'
+    case 'macOS':
+        ffmpeg = ffmpeg + 'ffmpeg'
+
+print('ffmpeg : ' + ffmpeg)
 
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
@@ -25,8 +33,6 @@ starttc_frame = 0
 endtc_frame = None
 
 framerate = None
-
-option_afficher = ''  # Valeur des paramètres.
 
 # Liste des erreurs : tc in | tc out | erreur | option
 list_tc_in = np.array([])
@@ -66,12 +72,11 @@ def updateListeProbleme(rapport, num_image: int) -> None:
             i -= 1
 
 
-def addProbleme(message, option, num_image) -> None:
+def addProbleme(message, num_image) -> None:
     """
     Quand on doit reporter un problème dans le rapport.
 
     :param str message: Le message.
-    :param str option: Les options.
     :param int num_image: Le numéro d'image.
     """
     global list_tc_in, list_tc_out, list_erreur
@@ -159,11 +164,14 @@ def identique(image1, image2, methode: int) -> bool:
 # On ne lance le programme que si la licence est OK.
 if fct.licence():
     # TODO : Import XML de comparaison (généré par App Java):
-    xml = xmlparser.parse('C:\\Users\\win10dev\\Desktop\\comparaison.xml')
+    desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+    xml = xmlparser.parse(desktop + os.sep + 'comparaison.xml')
     options = xml.getroot().find('options')
     fichier_ref = xml.getroot().find('fichier_ref')
     chemin_fichier_ref = fichier_ref.find('chemin').text
     fichiers = xml.getroot().find('fichiers')
+
+    print('Ref : ' + chemin_fichier_ref)
 
     start_tc = fct.startTimeCodeFile(ffmpeg, chemin_fichier_ref)
     print('- Start tc: ' + start_tc)
@@ -225,7 +233,7 @@ if fct.licence():
                 print(str(i) + ' / ' + str(duree))
 
             if not identique(image, image2, 2):
-                addProbleme('Pas les mêmes image.', str(option_afficher), i)
+                addProbleme('Pas les mêmes image.', i)
 
         # Ferme le flux du fichier à comparer.
         reader2.close()

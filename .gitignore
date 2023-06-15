@@ -1,5 +1,10 @@
 # Ignore dossier des rapports :
-Rapports/*
+Rapports/*.html
+Rapports/JSON/*.json
+
+# Fichier à télécharger : "ffmpeg" (macOS) et "ffmpeg.exe" pour Windows.
+modules/ffmpeg
+modules/ffmpeg.exe
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
