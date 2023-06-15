@@ -31,10 +31,11 @@ def quitter(text):
     fen.destroy()
 
 
-def fenetre():
+def show():
     """
     Affiche la fenêtre.
     """
+    global fen
     # Définit les ratios.
     bdd.connect()
     liste_ratio = (bdd.convertTab(bdd.select('liste_ratio', 'ratio')))

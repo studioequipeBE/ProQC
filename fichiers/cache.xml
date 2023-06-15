@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cache>
+    <!-- On peut renseigner plusieurs fichiers à faire la cache. -->
+    <fichiers>
+        <fichier>
+            <chemin>X:\01_WIP\02_PICTURE\LesInvisibles_S02\02_TV_GRADE\01_FTR_SHRT_SERIE\EP03\LesInvisibles_S02E03_4444_UHD-21_25p_MOS_TXL_220727.mov</chemin>
+            <methode>MD5</methode>
+        </fichier>
+        <fichier>
+            <chemin>X:\01_WIP\02_PICTURE\LesInvisibles_S02\02_TV_GRADE\01_FTR_SHRT_SERIE\EP03\LesInvisibles_S02E03_4444_UHD-21_25p_MOS_TXL_220809.mov</chemin>
+            <methode>MD5</methode>
+        </fichier>
+    </fichiers>
+</cache>

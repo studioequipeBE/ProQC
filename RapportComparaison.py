@@ -62,7 +62,8 @@ class RapportComparaison:
          (
              id INTEGER NOT NULL,
              nom TEXT NOT NULL UNIQUE,
-             start_timecode TEXT NOT NULL
+             start_timecode TEXT NOT NULL,
+             PRIMARY KEY("id" AUTOINCREMENT)
          )
          ''')
 
@@ -70,10 +71,11 @@ class RapportComparaison:
          CREATE TABLE IF NOT EXISTS difference
          (
              id INTEGER NOT NULL,
-             id_fichier_ref TEXT NOT NULL UNIQUE,
+             id_fichier_ref TEXT NOT NULL,
              id_fichier_compare TEXT NOT NULL,
              tc_in TEXT NULL,
-             tc_out TEXT NULL
+             tc_out TEXT NULL,
+             PRIMARY KEY("id" AUTOINCREMENT)
          )
          ''')
 
@@ -93,8 +95,8 @@ class RapportComparaison:
         # Info du fichier analysé :
         self.cur.execute(
             'INSERT INTO fichier_ref(nom, duree_image, start_timecode, framerate, debut_analyse) VALUES("'
-            + self.fichier_ref + '", ' + str(duree) + ', "' + timecodestart + '", '
-            + str(framerate) + ',' + str(datetime.datetime.now()) + ')')
+            + self.fichier_ref + '", ' + str(duree) + ', "' + timecodestart + '", "'
+            + str(framerate) + '", "' + str(datetime.datetime.now()) + '")')
         self.con.commit()
 
         res = self.cur.execute(
@@ -109,14 +111,12 @@ class RapportComparaison:
 
         self.cur.execute(
             'INSERT INTO fichier(nom, start_timecode) VALUES("'
-            + nom_fichier + ', "' + timecodestart + '")')
+            + nom_fichier + '", "' + timecodestart + '")')
         self.con.commit()
 
         res = self.cur.execute(
             'SELECT id FROM fichier WHERE nom= "' + nom_fichier + '" ORDER BY id DESC LIMIT 1')
-        self.id_rapport = res.fetchall()[0][0]
-
-        self.id_fichier_compare = -1
+        self.id_fichier_compare = res.fetchall()[0][0]
 
     def addDifference(self, tc_in: str, tc_out: str) -> None:
         """
@@ -128,8 +128,8 @@ class RapportComparaison:
         self.cur.execute(
             'INSERT INTO difference(id_fichier_ref, id_fichier_compare, tc_in, tc_out)'
             'VALUES'
-            '("' + str(self.id_fichier_ref) + ', ' + str(self.id_fichier_compare)
-            + ',"' + tc_in + '", "' + tc_out + '")')
+            '(' + str(self.id_fichier_ref) + ', ' + str(self.id_fichier_compare)
+            + ', "' + tc_in + '", "' + tc_out + '")')
         self.con.commit()
 
     def close(self) -> None:

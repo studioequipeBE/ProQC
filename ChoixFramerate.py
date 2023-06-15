@@ -4,10 +4,7 @@
 # Fichier : Permet de choisir (graphiquement) le framerate à analyser.
 
 # == IMPORTS ==
-
-# Essaie d'importer les fichiers nécessaires au programme :
 from tkinter import *
-from tkinter.filedialog import askopenfilename
 
 root = Tk()
 entry = Entry(root)

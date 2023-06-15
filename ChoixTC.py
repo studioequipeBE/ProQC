@@ -5,7 +5,6 @@
 
 # == IMPORTS ==
 from tkinter import *
-from tkinter.filedialog import askopenfilename
 
 tc_in = None
 tc_out = None

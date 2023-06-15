@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<comparaison>
+    <options>
+        <!-- Si on doit compenser pour caler les images, unité de mesure : en image. -->
+        <offset_ref>0</offset_ref>
+    </options>
+    <fichier_ref>
+        <chemin>X:\01_WIP\02_PICTURE\LesInvisibles_S02\02_TV_GRADE\01_FTR_SHRT_SERIE\EP01\LesInvisibles_S02E01_4444_UHD-21_25p_MOS_TXL_220725.mov</chemin>
+        <!-- Si on veut utiliser une cache. -->
+        <utiliser_cache>false</utiliser_cache>
+    </fichier_ref>
+    <fichiers>
+        <fichier>
+            <chemin>X:\01_WIP\02_PICTURE\LesInvisibles_S02\02_TV_GRADE\01_FTR_SHRT_SERIE\EP01\LesInvisibles_S02E01_4444_UHD-21_25p_MOS_TXL_220729.mov</chemin>
+            <meme_machine>true</meme_machine>
+            <!-- Si le fichier a été sort depuis la même machine, on peut utiliser la cache. -->
+            <utiliser_cache>false</utiliser_cache>
+            <!-- Nombre d'image offset. -->
+            <offset>0</offset>
+        </fichier>
+    </fichiers>
+</comparaison>

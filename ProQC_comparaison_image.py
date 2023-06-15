@@ -130,9 +130,17 @@ def identique(image1, image2, methode: int) -> bool:
             return True
         else:
             return False
-    # Comparaison par somme :
+    # Comparaison par différence :
     elif methode == 2:
-        if (np.abs(image1 - image2)).sum() == 0:
+        diff = np.abs(image1.astype(np.intc) - image2.astype(np.intc))
+        # sum = diff.sum()
+        max = diff.max()
+
+        print('max (intc) = ' + str(max))
+        # print('sum (intc) = ' + str(sum))
+
+        # Si la différence est infime, alors on dit que c'est la même chose.
+        if max <= 1:  # sum <= 1000 and # La sum tient compte de s'il y a beaucoup de différence entre les deux images.
             return True
         else:
             return False
@@ -216,7 +224,7 @@ if fct.licence():
             if (i % (framerate * 30)) == 0:
                 print(str(i) + ' / ' + str(duree))
 
-            if not identique(image, image2, 3):
+            if not identique(image, image2, 2):
                 addProbleme('Pas les mêmes image.', str(option_afficher), i)
 
         # Ferme le flux du fichier à comparer.
