@@ -7,15 +7,13 @@
 import imageio
 import numpy as np
 import os
-import timecode as Timecode
 
 import ChoixFichierVideo as cf  # Programme qui choisi le fichier à analyser.
 import ChoixFramerateListe as cfr
 import ChoixRatioListe as cr
-import ChoixResolutionListe as cre
 import fonctions as fct
 import Rapport as r
-import TimecodeP as tc
+from outils.metadata import MetaData
 
 ffmpeg = fct.getFFmpeg()
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
@@ -71,11 +69,6 @@ def updateListeProbleme(num_image: int) -> None:
             num_erreur = num_erreur + 1
             print(str(num_erreur) + ' / ' + str(list_tc_in[i]) + " : update liste, on ajoute une erreur!")
             # On écrit dans le rapport l'erreur :
-
-            # La notion de temps en timecode.
-            # r.setRapport(str(TcActuel(list_tc_in[i], framerate)) + " a " + str(TcActuel(list_tc_out[i], framerate)) + ": " + str(list_erreur[i]) + "\n")
-            # La notion de temps en image.
-            # r.setRapport(str(int(list_tc_in[i])) + " a " + str(int(list_tc_out[i])) + ": " + str(list_erreur[i]) + "\n")
             r.addProbleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]), str(liste_option[i]))
 
             # On supprime de la liste l'erreur :
@@ -322,7 +315,7 @@ def close() -> None:
     """
     Clôturer l'analyse d'une video (en clôturant son flux ainsi que celui du rapport).
     """
-    global i_global, reader, r
+    global i_global, reader
     # On récupère les dernières valeurs de la liste.
     updateListeProbleme(i_global)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
 
@@ -355,10 +348,14 @@ if fct.licence():
 
     r.setRapport('== Debut du rapport ==\n')
 
+    # Choix du ratio :
+    cr.show()
     ratio = cr.getRatio()
 
-    # Choix du ratio :
-    resolution = cre.getResolution()
+    # Récupère les informations concernant le fichier.
+    metadonnees = MetaData(fichier)
+
+    resolution = metadonnees.resolution()  # '3840x2160'
     setRatio(ratio, resolution)
     duree_image = reader.get_length()
     endtc_frame = duree_image - 1
