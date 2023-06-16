@@ -10,13 +10,16 @@ import sqlite3
 
 
 class RapportComparaison:
+    """
+    Rapport pour les comparaisons de plusieurs images.
+    """
     # == ATTRIBUTS ==
 
     # Numéro d'erreur.
     numero = 0
 
     # Framerate du fichier:
-    framerateG = None
+    framerate = None
     tc_debut = None
 
     chemin_rapport = 'Rapports/'
@@ -27,11 +30,12 @@ class RapportComparaison:
     # Le fichier qu'on compare à la ref.
     id_fichier_compare = 0
 
-    def __init__(self, fichier_ref: str):
+    def __init__(self, fichier_ref: str, nouveau_rapport: bool = True):
         """
         Création du rapport dans une base de données SQLite.
 
         :param str fichier_ref : Le fichier de référence.
+        :param bool nouveau_rapport: Si on doit faire un nouveau rapport ou partir sur le précédent (fct que pour db).
         """
         self.fichier_ref = fichier_ref
 
@@ -79,24 +83,21 @@ class RapportComparaison:
          )
          ''')
 
-    def rapport(self, duree: int = 0, timecodestart: str = '00:00:00:00', framerate: int = 24,
-                nouveau_rapport: bool = False) -> None:
+    def setInformation(self, duree: int = 0, timecodestart: str = '00:00:00:00', framerate_: int = 24) -> None:
         """
         On définit des informations sur le fichier de référence.
 
         :param int duree: La durée du fichier en image.
         :param str timecodestart: Timecode début du fichier.
-        :param int framerate: Framerate du fichier.
-        :param bool nouveau_rapport: Si on doit faire un nouveau rapport ou partir sur le précédent (fct que pour db).
+        :param int framerate_: Framerate du fichier.
         """
-        global framerateG, tc_debut, id_rapport, type_
-        framerateG = framerate
+        self.framerate = framerate_
 
         # Info du fichier analysé :
         self.cur.execute(
             'INSERT INTO fichier_ref(nom, duree_image, start_timecode, framerate, debut_analyse) VALUES("'
             + self.fichier_ref + '", ' + str(duree) + ', "' + timecodestart + '", "'
-            + str(framerate) + '", "' + str(datetime.datetime.now()) + '")')
+            + str(self.framerate) + '", "' + str(datetime.datetime.now()) + '")')
         self.con.commit()
 
         res = self.cur.execute(
@@ -107,8 +108,6 @@ class RapportComparaison:
         """
         Ajoute un fichier à comparer et le définit comme celui courant.
         """
-        print()
-
         self.cur.execute(
             'INSERT INTO fichier(nom, start_timecode) VALUES("'
             + nom_fichier + '", "' + timecodestart + '")')

@@ -15,9 +15,6 @@ import TimecodeP as tc
 
 # == ATTRIBUTS ==
 
-# Fichier pour rapport :
-file_ = None
-
 # Numéro d'erreur.
 numero = 0
 
@@ -45,7 +42,7 @@ timecodestart_ = None
 # == FONCTIONS ==
 # Création du rapport en .txt ou HTML, on pourrait faire un rapport en HTML, plus classe voir ajouter les valeurs dans la base de donnees de QC! :)
 def Rapport(fichier) -> NoReturn:
-    global file_, chemin_rapport, db, cur, fichier_tmp
+    global chemin_rapport, db, cur, fichier_tmp
 
     fichier_tmp = fichier
 
@@ -71,7 +68,7 @@ def projet_en_cours() -> int:
 
 # Quand on commence le rapport :
 def Start(fichier: str, duree_image: int, timecodestart: str = "00:00:00:00", framerate_: int = 24, ratio: str = "2.39", resolution_: str = "1920x1080") -> NoReturn:
-    global framerate, tc_debut, file_, id_projet, ratio_, duree_image_, timecodestart_, resolution
+    global framerate, tc_debut, id_projet, ratio_, duree_image_, timecodestart_, resolution
 
     ratio_ = ratio
     duree_image_ = duree_image
@@ -114,7 +111,7 @@ def close() -> NoReturn:
     """
     Clôturer le flux du fichier de rapport.
     """
-    global id_projet, file_, cur, fichier_tmp, fichier_tmp, ratio_, duree_image_, timecodestart_, framerate, resolution
+    global id_projet, cur, fichier_tmp, fichier_tmp, ratio_, duree_image_, timecodestart_, framerate, resolution
 
     # On indique que le fichier a fini d'être analysé.
     cur.execute('UPDATE projet SET statut = "fini" WHERE id LIKE "' + str(id_projet) + '"')
@@ -148,61 +145,61 @@ def close() -> NoReturn:
     json.write('}\n')
     json.close()
 
-    # Ecrit le fichier HTML :
-    file_ = open(str(chemin_rapport) + 'rapport_' + str(fichier_tmp) + '.html', 'w')
-    file_.write("<html>\n")
-    file_.write("\t<head>\n")
-    file_.write("\t\t<title>Rapport : " + str(fichier_tmp) + "</title>\n")
+    # Écrit le fichier HTML :
+    file = open(str(chemin_rapport) + 'rapport_' + str(fichier_tmp) + '.html', 'w')
+    file.write("<html>\n")
+    file.write("\t<head>\n")
+    file.write("\t\t<title>Rapport : " + str(fichier_tmp) + "</title>\n")
 
-    file_.write("\t\t<style type= \"text/css\">\n")
-    file_.write("\t\t.bord{\n")
-    file_.write("\t\t\tborder-width: 1px;\n")
-    file_.write("\t\t\tborder-style: solid;\n")
-    file_.write("\t\t\tborder-bottom-width: 1px;\n")
-    file_.write("\t\t\t}\n")
-    file_.write("\t\t</style>\n")
+    file.write("\t\t<style type= \"text/css\">\n")
+    file.write("\t\t.bord{\n")
+    file.write("\t\t\tborder-width: 1px;\n")
+    file.write("\t\t\tborder-style: solid;\n")
+    file.write("\t\t\tborder-bottom-width: 1px;\n")
+    file.write("\t\t\t}\n")
+    file.write("\t\t</style>\n")
 
-    file_.write("\t</head>\n")
-    file_.write("\t<body>\n")
-    file_.write("\t\t<p>Rapport demi-ligne</p>\n")
-    file_.write("\t\t<p><strong>Fichier :</strong> " + fichier_tmp + "</p>\n")
-    file_.write("\t\t<p><strong>Ratio :</strong> " + ratio_ + "</p>\n")
+    file.write("\t</head>\n")
+    file.write("\t<body>\n")
+    file.write("\t\t<p>Rapport demi-ligne</p>\n")
+    file.write("\t\t<p><strong>Fichier :</strong> " + fichier_tmp + "</p>\n")
+    file.write("\t\t<p><strong>Ratio :</strong> " + ratio_ + "</p>\n")
     print('Framerate : ' + str(framerate))
     print('Durée (image) : ' + str(duree_image_))
     print('Durée : ' + str(tc.frames_to_timecode(duree_image_, framerate)))
 
-    file_.write("\t\t<p><strong>Durée :</strong> " + str(duree_image_) + " image(s) (TC " + tc.frames_to_timecode(duree_image_, framerate) + ")</p>\n")
+    file.write("\t\t<p><strong>Durée :</strong> " + str(duree_image_) + " image(s) (TC " + tc.frames_to_timecode(duree_image_, framerate) + ")</p>\n")
 
     # Parfois l'affichage du TC bug quand le fichier vient du réseau.
     try:
         tc_debut = int(Timecode(framerate, timecodestart_).frames - 1)
-        file_.write("\t\t<p><strong>Timecode début :</strong> " + timecodestart_ + " (" + str(tc_debut) + ")</p>\n")
+        file.write("\t\t<p><strong>Timecode début :</strong> " + timecodestart_ + " (" + str(tc_debut) + ")</p>\n")
     except:
-        file_.write("\t\t<p><strong>Timecode début :</strong> <i>inconnu</i></p>\n")
+        file.write("\t\t<p><strong>Timecode début :</strong> <i>inconnu</i></p>\n")
 
-    file_.write("\t\t<p><strong>Framerate :</strong> " + str(framerate) + " i/s</p>\n")
-    file_.write("\t\t<table class= \"bord\">\n")
-    file_.write("\t\t\t<tr>\n")
-    file_.write("\t\t\t\t<th class= \"bord\">n°</th>\n")
-    file_.write("\t\t\t\t<th class= \"bord\">TC IN</th>\n")
-    file_.write("\t\t\t\t<th class= \"bord\">TC OUT</th>\n")
-    file_.write("\t\t\t\t<th class= \"bord\">REMARK</th>\n")
-    file_.write("\t\t\t\t<th class= \"bord\">OPTION</th>\n")
-    file_.write("\t\t\t</tr>\n")
+    file.write("\t\t<p><strong>Framerate :</strong> " + str(framerate) + " i/s</p>\n")
+    file.write("\t\t<table class= \"bord\">\n")
+    file.write("\t\t\t<tr>\n")
+    file.write("\t\t\t\t<th class= \"bord\">n°</th>\n")
+    file.write("\t\t\t\t<th class= \"bord\">TC IN</th>\n")
+    file.write("\t\t\t\t<th class= \"bord\">TC OUT</th>\n")
+    file.write("\t\t\t\t<th class= \"bord\">REMARK</th>\n")
+    file.write("\t\t\t\t<th class= \"bord\">OPTION</th>\n")
+    file.write("\t\t\t</tr>\n")
 
     numero = 0
 
     for row in cur.execute('SELECT * FROM remarque WHERE id_projet LIKE "' + str(id_projet) + '" ORDER BY tc_in, tc_out ASC'):
         numero = numero + 1
-        file_.write("\t\t\t<tr>\n")
-        file_.write("\t\t\t\t<td class= \"bord\">" + str(numero) + "</td>\n")
-        file_.write("\t\t\t\t<td class= \"bord\">" + row[1] + "</td>\n")
-        file_.write("\t\t\t\t<td class= \"bord\">" + row[2] + "</td>\n")
-        file_.write("\t\t\t\t<td class= \"bord\">" + row[3] + "</td>\n")
-        file_.write("\t\t\t\t<td class= \"bord\">" + row[4] + "</td>\n")
-        file_.write("\t\t\t</tr>\n")
+        file.write("\t\t\t<tr>\n")
+        file.write("\t\t\t\t<td class= \"bord\">" + str(numero) + "</td>\n")
+        file.write("\t\t\t\t<td class= \"bord\">" + row[1] + "</td>\n")
+        file.write("\t\t\t\t<td class= \"bord\">" + row[2] + "</td>\n")
+        file.write("\t\t\t\t<td class= \"bord\">" + row[3] + "</td>\n")
+        file.write("\t\t\t\t<td class= \"bord\">" + row[4] + "</td>\n")
+        file.write("\t\t\t</tr>\n")
 
-    file_.write("\t\t</table>\n")
-    file_.write("\t</body>\n")
-    file_.write('</html>')
-    file_.close()
+    file.write("\t\t</table>\n")
+    file.write("\t</body>\n")
+    file.write('</html>')
+    file.close()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Main (+ les fonctions...)
+# Fichier : Main
 
 # == IMPORTS ==
 import hashlib
@@ -23,7 +23,6 @@ liste_fichier = []
 # == MAIN ==
 # On ne lance le programme que si la licence est OK.
 if fct.licence():
-
     xml = xmlparser.parse('C:\\Users\\win10dev\\Desktop\\cache.xml')
     fichiers = xml.getroot().find('fichiers')
 
@@ -67,7 +66,7 @@ if fct.licence():
 
         framerate = int(reader.get_meta_data()['fps'])
 
-        print('- Framerate: ' + str(framerate))
+        print('- Framerate : ' + str(framerate))
 
         duree_seconde = str(reader.get_meta_data()['duration']).split('.')
 

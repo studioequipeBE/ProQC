@@ -11,7 +11,7 @@ locale.setlocale(locale.LC_TIME, '')
 
 
 # == FONCTIONS ==
-def aujourdhui(sntp='ntp.univ-lyon1.fr') -> int:
+def aujourdhui(sntp: str = 'ntp.univ-lyon1.fr') -> int:
     """"
     Retourne la date d'aujourd'hui.
 

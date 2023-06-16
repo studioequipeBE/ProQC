@@ -1,14 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Main (+ les fonctions...)
+# Fichier : Main
 
 # == IMPORTS ==
-import hashlib
-import imageio
-import os
 import sqlite3
-import xml.etree.ElementTree as xmlparser
 
 import fonctions as fct
 
@@ -26,16 +22,16 @@ if fct.licence():
     con2 = sqlite3.connect('C:\\Users\\win10dev\\Desktop\\LesInvisibles_S02E01_4444_UHD-21_25p_MOS_TXL_220729.mov.db')
     cur2 = con2.cursor()
 
-    cur.execute("SELECT duree_image FROM fichier ORDER BY id DESC LIMIT 1")
+    cur.execute('SELECT duree_image FROM fichier ORDER BY id DESC LIMIT 1')
 
     nombre_image = cur.fetchall()[0][0]
 
     print('nombre_image : ' + str(nombre_image))
 
-    cur.execute("SELECT hash FROM md5 ORDER BY id ASC")
+    cur.execute('SELECT hash FROM md5 ORDER BY id ASC')
     liste_md5_f1 = cur.fetchall()
 
-    cur2.execute("SELECT hash FROM md5 ORDER BY id ASC")
+    cur2.execute('SELECT hash FROM md5 ORDER BY id ASC')
     liste_md5_f2 = cur2.fetchall()
 
     num_image_premiere_different = -1
@@ -59,7 +55,7 @@ if fct.licence():
                 list_tc_in = i
             list_tc_out = i
 
-    if list_tc_out != i - 1 and list_tc_out != -1:
+    if list_tc_out != nombre_image - 1 and list_tc_out != -1:
         print(str(list_tc_in) + ' - ' + str(list_tc_out) + ' : Different')
 
     # Ferme flux DB.

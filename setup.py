@@ -7,20 +7,19 @@ from cx_Freeze import setup, Executable
 
 # == MAIN ==
 target = Executable(
-    script="ProQC.py",
+    script='ProQC.py',
     # base= "Win32GUI",
     # compress= False,
     # copyDependentFiles= True,
     # appendScriptToExe= True,
     # appendScriptToLibrary= False,
-    icon="_Projet/logo_ProQC.ico"
+    icon='_Projet/logo_ProQC.ico'
 )
 
 setup(
-        name="Pro QC",
-        version="0.8",
-        description="Logiciel de QC image",
-        author="Edouard Jeanjean",
+        name='Pro QC',
+        version='0.8',
+        description='Logiciel de QC image',
+        author='Edouard Jeanjean',
         executables=[target]
-        # executables = [Executable("ProQC.py")]
 )

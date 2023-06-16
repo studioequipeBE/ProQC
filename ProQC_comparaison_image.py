@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Main (+ les fonctions...)
+# Fichier : Main
 
 # == IMPORTS ==
 import hashlib
@@ -11,10 +11,10 @@ import os
 import xml.etree.ElementTree as xmlparser
 
 import fonctions as fct
-import RapportComparaison as r
+import RapportComparaison as rapport
 
-
-os.environ['IMAGEIO_FFMPEG_EXE'] = fct.getFFmpeg()
+ffmpeg = fct.getFFmpeg()
+os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
 
@@ -36,11 +36,10 @@ num_erreur = 0
 
 
 # == FONCTIONS ==
-def updateListeProbleme(rapport, num_image: int) -> None:
+def updateListeProbleme(num_image: int) -> None:
     """
     Met à jour la liste des erreurs pour écrire dans le rapport.
 
-    :param rapport:
     :param int num_image: Numéro d'image.
     """
     global list_tc_in, list_tc_out, list_erreur, num_erreur
@@ -49,7 +48,7 @@ def updateListeProbleme(rapport, num_image: int) -> None:
     for i in range(0, np.size(list_tc_in)):
         if i < np.size(list_tc_in) and list_tc_out[i] != (num_image - 1):
             num_erreur = num_erreur + 1
-            print(str(num_erreur) + ' / ' + str(list_tc_in[i]) + " : update liste, on ajoute une erreur!")
+            print(str(num_erreur) + ' / ' + str(list_tc_in[i]) + ' : update liste, on ajoute une erreur !')
             # On écrit dans le rapport l'erreur :
 
             # La notion de temps en image.
@@ -112,7 +111,6 @@ def identique(image1, image2, methode: int) -> bool:
 
     # Comparaison pixel par pixel :
     if methode == 0:
-        compare = np.array(image1) == np.array(image2)
         compare2 = (image1 == image2).all()
         if compare2:
             print('Identique.')
@@ -168,7 +166,7 @@ if fct.licence():
     print('- Start tc: ' + start_tc)
 
     # Construit une DB avec le résultat.
-    rapport = r.RapportComparaison(os.path.basename(chemin_fichier_ref))
+    rapport = rapport.RapportComparaison(os.path.basename(chemin_fichier_ref), True)
 
     # Image quoi ? RGB/NB??? En fait, cette information est importante...
     reader = imageio.get_reader(chemin_fichier_ref, ffmpeg_params=['-an'])
@@ -179,11 +177,11 @@ if fct.licence():
 
     duree_seconde = str(reader.get_meta_data()['duration']).split('.')
 
-    duree = int(duree_seconde[0]) * framerate + int((int(duree_seconde[1]) / 100) * framerate)
+    duree_image = int(duree_seconde[0]) * framerate + int((int(duree_seconde[1]) / 100) * framerate)
 
-    rapport.rapport(duree, start_tc, framerate, False)
+    rapport.setInformation(duree_image, start_tc, framerate)
 
-    endtc_frame = duree - 1
+    endtc_frame = duree_image - 1
 
     # On vérifie l'intégralité du fichier :
     starttc_frame = starttc_frame
@@ -204,7 +202,7 @@ if fct.licence():
 
         print('- Framerate: ' + str(framerate))
 
-        endtc_frame = duree - 1
+        endtc_frame = duree_image - 1
 
         # On vérifie l'intégralité du fichier :
         starttc_frame = starttc_frame
@@ -217,11 +215,11 @@ if fct.licence():
             image2 = reader2.get_data(i)  # Récupère l'image suivante de reader2 (image 2).
 
             # Met à jour la liste des erreurs (pour avoir un groupe de tc pour une erreur).
-            updateListeProbleme(rapport, i)
+            updateListeProbleme(i)
 
             # Affiche l'avancement tous les 30 secondes :
             if (i % (framerate * 30)) == 0:
-                print(str(i) + ' / ' + str(duree))
+                print(str(i) + ' / ' + str(duree_image))
 
             if not identique(image, image2, 2):
                 addProbleme('Pas les mêmes image.', i)
@@ -231,7 +229,7 @@ if fct.licence():
 
         # Clôturer l'analyse d'une video (en clôturant son flux ainsi que celui du rapport).
         # On récupère les dernières valeurs de la liste.
-        updateListeProbleme(rapport, duree)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
+        updateListeProbleme(duree_image)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
 
     # On clôture tous les flux :
     reader.close()

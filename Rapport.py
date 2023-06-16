@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : il gçre le rapport généré. Le tout existe dans "Main.py". On pourrait en faire un objet !
+# Fichier : il gère le rapport généré. On pourrait en faire un objet !
 
 # == IMPORTS ==
 import os
@@ -19,7 +19,7 @@ file_ = None
 numero = 0
 
 # Framerate du fichier:
-framerateG = None
+framerate = None
 tc_debut = None
 
 # Type de rapport (HTML, txt, bdd):
@@ -30,6 +30,8 @@ chemin_rapport = 'Rapports/'
 # ID du rapport QC dans la DB à utiliser.
 id_rapport = 0
 
+# ID du projet dans la base de données :
+id_projet = None
 
 # == FONCTIONS ==
 def rapport(fichier: str, nouveau_rapport: bool, type_tmp: str = 'html'):
@@ -57,21 +59,21 @@ def rapport(fichier: str, nouveau_rapport: bool, type_tmp: str = 'html'):
             id_rapport = bdd.addRapport(fichier)
 
 
-def setInformations(duree: int, timecodestart: str = '00:00:00:00', framerate: int = 24, ratio: str = None) -> None:
+def setInformations(duree: int, timecodestart: str = '00:00:00:00', framerate_: int = 24, resolution: str= '1920x1080', ratio: str = None) -> None:
     """
     Quand on commence le rapport.
 
     :param int duree: La durée du fichier en image.
     :param str timecodestart:
-    :param int framerate:
+    :param int framerate_:
     :param str ratio: Le ratio du fichier
     """
-    global framerateG, tc_debut, id_rapport, type_
-    framerateG = framerate
+    global framerate, tc_debut, id_rapport, type_
+    framerate = framerate_
     # Si on écrit un fichier texte :
     if type_ == 'html':
         file_.write("<p><strong>Durée :</strong> " + str(duree) + " image(s) (TC " +
-                    tc.frames_to_timecode(duree, framerateG) + ")</p>\n")
+                    tc.frames_to_timecode(duree, framerate) + ")</p>\n")
 
         # Parfois l'affichage du TC bug quand le fichier vient du réseau.
         try:
@@ -97,6 +99,16 @@ def setInformations(duree: int, timecodestart: str = '00:00:00:00', framerate: i
         )
 
 
+def getProjetEnCours() -> int:
+    """
+    Indique si un projet est en cours.
+    """
+    global cur
+    cur.execute("SELECT count(*) FROM projet WHERE statut LIKE 'en cours'")
+
+    return cur.fetchall()
+
+
 def setRapport(message: str) -> None:
     """
     Écrire dans le rapport.
@@ -119,18 +131,26 @@ def addProbleme(tc_in: str, tc_out: str, remarque: str, option: str) -> None:
     :param str remarque: Le problème.
     :param str option: Les options.
     """
-    global numero, framerate, tc_debut, id_rapport, framerateG
+    global numero, tc_debut, id_rapport, framerate
 
     if type_ == 'html':
         numero = numero + 1
-        file_.write("<tr><td class= \"bord\">" + str(numero) + "</td><td class= \"bord\">" + tc.frames_to_timecode(
-            int(tc_in) + tc_debut, framerateG) + "</td><td class= \"bord\">" + tc.frames_to_timecode(
-            int(tc_out) + tc_debut,
-            framerateG) + "</td><td class= \"bord\">" + remarque + "</td><td class= \"bord\">" + option + "</td></tr>\n")
+        file_.write("<tr><td class= \"bord\">" + str(numero) + "</td><td class= \"bord\">" +
+                    tc.frames_to_timecode(int(tc_in) + tc_debut, framerate) + "</td><td class= \"bord\">" +
+                    tc.frames_to_timecode(int(tc_out) + tc_debut,framerate) +
+                    "</td><td class= \"bord\">" + remarque + "</td><td class= \"bord\">" + option + "</td></tr>\n")
     else:
         bdd.insert('rapport_qc_remarque',
                    'id_rapport_qc, timecode_in, timecode_out, remarque, echelle',
                    str(id_rapport) + ', "' + tc_in + '", "' + tc_out + '", "' + remarque + '", 1')
+
+
+def savestate(num_image) -> None:
+    """
+    Indique jusqu'où on était dans le rapport s'il y a eu un crash.
+    """
+    global cur, id_projet
+    cur.execute('UPDATE projet SET image_analyse = "' + str(num_image) + '" WHERE id LIKE "' + str(id_projet) + '"')
 
 
 def close() -> None:

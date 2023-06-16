@@ -6,14 +6,12 @@
 # == IMPORTS ==
 import numpy as np
 import os
-import timecode as Timecode
 
 import ChoixFichierAudio as cf  # Programme qui choisi le fichier à analyser.
 import ChoixFichierAudio as cf2  # Programme qui choisi le fichier à analyser.
 import ChoixFramerateListe as cfr  # On doit définir le framerate pour avoir un TC.
 import fonctions as fct
 import Rapport as r
-import TimecodeP as tc
 
 
 ffmpeg = fct.getFFmpeg()
@@ -40,9 +38,6 @@ list_tc_out = np.array([])
 list_erreur = np.array([])
 liste_option = np.array([])
 
-# Fichier pour rapport :
-file = None
-
 # Numéro d'erreur
 num_erreur = 0
 
@@ -62,11 +57,6 @@ def updateListeProbleme(num_image: int) -> None:
             num_erreur = num_erreur + 1
             print(str(num_erreur) + ' / ' + str(list_tc_in[i]) + " : update liste, on ajoute une erreur!")
             # On écrit dans le rapport l'erreur :
-
-            # La notion de temps en timecode
-            # r.setRapport(str(TcActuel(list_tc_in[i], framerate)) + " a " + str(TcActuel(list_tc_out[i], framerate)) + ": " + str(list_erreur[i]) + "\n")
-            # La notion de temps en image.
-            # r.setRapport(str(int(list_tc_in[i])) + " a " + str(int(list_tc_out[i])) + ": " + str(list_erreur[i]) + "\n")
             r.addProbleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]), str(liste_option[i]))
 
             # On supprime de la liste l'erreur :
@@ -105,17 +95,6 @@ def addProbleme(message: str, option: str, num_image: int) -> None:
         list_erreur = np.append(list_erreur, message)
 
 
-def close() -> None:
-    """
-    Cloture l'analyse d'une video (en clôturant son flux ainsi que celui du rapport).
-    """
-    # On récupère les dernières valeurs de la liste.
-    updateListeProbleme()  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
-
-    # On clôture tous les flux :
-    r.close()
-
-
 # == MAIN ==
 # On ne lance le programme que si la licence est OK.
 if fct.licence():
@@ -129,7 +108,7 @@ if fct.licence():
     duree = 100
 
     # Note: [-1] = dernier element de la liste.
-    r.rapport(fichier.split('/')[-1], 'html')
+    r.rapport(fichier.split('/')[-1], True, 'html')
 
     # r.setRapport("== Debut du rapport ==\n")
 
@@ -137,7 +116,7 @@ if fct.licence():
 
     print('- Framerate: ' + str(framerate))
 
-    r.start(fichier, str(duree), start_tc, framerate)
+    r.setInformations(duree, start_tc, framerate)
 
     # Fichier 2:
     cf2.fenetre()
@@ -145,6 +124,11 @@ if fct.licence():
     print('fichier 2: ' + str(fichier2))
     print('- Start tc: ' + str(fct.startTimeCodeFile(ffmpeg, fichier2)))
 
-close()
+    # Cloture l'analyse d'une video (en clôturant son flux ainsi que celui du rapport).
+    # On récupère les dernières valeurs de la liste.
+    updateListeProbleme(duree)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
+
+    # On clôture tous les flux.
+    r.close()
 
 # == END ==
