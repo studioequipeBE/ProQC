@@ -13,7 +13,6 @@ from timecode import Timecode
 import ChoixFichierVideo as cf  # Programme qui choisi le fichier à analyser.
 import ChoixRatioListe as cr
 import fonctions as fct
-import TimecodeP as tc
 import RapportDemiligne as rapport
 from outils.metadata import MetaData
 
@@ -45,7 +44,8 @@ list_tc_out = np.array([])
 list_erreur = np.array([])
 liste_option = np.array([])
 
-# Coefficient appliqué à certains chiffre. Les calcules sont basé sur de la HD, donc souvent, x2 pour de l'UHD (calcule en ligne et non intégralité image).
+# Coefficient appliqué à certains chiffres.
+# Les calculs sont basé sur de la HD, donc souvent, x2 pour de l'UHD (calcule en ligne et non intégralité image).
 coefficient_resolution = 1
 
 # Numéro d'erreur
@@ -63,7 +63,7 @@ def updateListeProbleme(num_image: int) -> None:
 
     :param int num_image: Numéro d'image.
     """
-    global list_tc_in, list_tc_out, list_erreur, liste_option, num_erreur
+    global num_erreur, list_tc_in, list_tc_out, list_erreur, liste_option
 
     # Parcoure la liste des problèmes, si tc out discontinu, alors on écrit dans le rapport.
     for i in range(0, np.size(list_tc_in)):
@@ -71,12 +71,8 @@ def updateListeProbleme(num_image: int) -> None:
             num_erreur = num_erreur + 1
             print(str(num_erreur) + ' / ' + str(list_tc_in[i]) + " : update liste, on ajoute une erreur!")
             # On écrit dans le rapport l'erreur :
-
-            # La notion de temps en timecode.
-            # rapport.setRapport(str(TcActuel(list_tc_in[i], framerate)) + " a " + str(TcActuel(list_tc_out[i], framerate)) + ": " + str(list_erreur[i]) + "\n")
             # La notion de temps en image.
-            # rapport.setRapport(str(int(list_tc_in[i])) + " a " + str(int(list_tc_out[i])) + ": " + str(list_erreur[i]) + "\n")
-            rapport.addProbleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]), str(liste_option[i]))
+            rapport.addProbleme(int(list_tc_in[i]), int(list_tc_out[i]), str(list_erreur[i]), str(liste_option[i]))
 
             # On supprime de la liste l'erreur :
             list_tc_in = np.delete(list_tc_in, i)
@@ -270,7 +266,7 @@ def demiLigne(ligne_utile, ligne_avant) -> bool:
 
         # Si les deux vallent zéro, on ne compte pas d'erreur (cela serait possiblement un défaut de blanking mais pas de demi-ligne).
         # Si les valeurs (2 lignes) sont vraiment faible (100 = FHD, dû à la compression), on ne compte pas comme un défaut. C'est noir...
-        # Si les deux lignes ont pour valeur maximal 1 (= image noire avec défaut de compression), alors c'est bon, il n'y a pas de souci.
+        # Si les deux lignes ont pour valeurs maximales 1 (= image noire avec défaut de compression), alors c'est bon, il n'y a pas de souci.
         # Si inférieur à 100 et que la moyenne est égale à moins d'un 1% près (0,95%), alors c'est bon!
         if (ligne_utile_sum < 100 * coefficient_resolution and ligne_avant_sum < 100 * coefficient_resolution) and (
                 (ligne_utile_max <= 1 and ligne_avant_max <= 1) or (
@@ -325,7 +321,6 @@ def demiLigneGauche(image) -> bool:
 
     :param image:
     """
-    global ligne_utile
     ligne_utile = image[y_debut_haut:y_debut_bas:1, x_debut_gauche:(x_debut_gauche + 1):1]  # Ligne limite.
     ligne_avant = image[y_debut_haut:y_debut_bas:1, (x_debut_gauche + 1):(x_debut_gauche + 2):1]
 
@@ -348,7 +343,7 @@ def close() -> None:
     """
     Clôturer l'analyse d'une video (en clôturant son flux ainsi que celui du rapport).
     """
-    global i_global, reader, rapport
+    global i_global, reader
     # On récupère les dernières valeurs de la liste.
     updateListeProbleme(i_global)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
 
@@ -379,10 +374,10 @@ if fct.licence():
 
     framerate = metadonnees.framerate()  # int(24)
 
+    # Choix du ratio :
     cr.show()
     ratio = cr.getRatio()
 
-    # Choix du ratio :
     resolution = metadonnees.resolution()  # '3840x2160'
 
     setRatio(ratio, resolution)
