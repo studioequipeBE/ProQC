@@ -1,26 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Main (+ les fonctions...)
+# Fichier : Main
 
 # == IMPORTS ==
 import imageio
 import numpy as np
 import os
 
-import ChoixFichier  # Programme qui choisi le fichier à analyser.
-import ChoixFramerate as cfr
-import ChoixRatio as cr
+import ChoixFichierVideo as cf  # Programme qui choisi le fichier à analyser.
+import ChoixRatioListe as cr
 import ChoixTC as ctc  # Programme qui choisi l'intervalle à analyser.
 import fonctions as fct
 import Rapport as r
+from outils.metadata import MetaData
 
-ffmpeg = 'C:\\ffmpeg\\ffmpeg.exe'
-
+ffmpeg = fct.getFFmpeg()
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
-# == Déclaration variables : ==
 ratio = None
 
 start_y = None
@@ -97,10 +95,7 @@ def updateListeProbleme(num_image) -> None:
             # On écrit dans le rapport l'erreur :
 
             # La notion de temps en timecode
-            # r.setRapport(str(TcActuel(list_tc_in[i], framerate)) + " a " + str(TcActuel(list_tc_out[i], framerate)) + ": " + str(list_erreur[i]) + "\n")
-            # La notion de temps en image
-            # r.setRapport(str(int(list_tc_in[i])) + " a " + str(int(list_tc_out[i])) + ": " + str(list_erreur[i]) + "\n")
-            r.addProbleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]))
+            r.addProbleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]), '')
 
             # On supprime de la liste l'erreur :
             list_tc_in = np.delete(list_tc_in, i)
@@ -156,11 +151,11 @@ def setRatio(ratio_tmp: str) -> None:
         end_y = 1079
     # Implementer, plus tard: 1.33 (dans 1920x1080), et surtout le 1.85.
 
-    x_p = 1920 / (7)
-    y_p = (end_y - start_y) / (7)
+    x_p = 1920 / 7
+    y_p = (end_y - start_y) / 7
 
-    x_g = 1920 / (12)
-    y_g = (end_y - start_y) / (12)
+    x_g = 1920 / 12
+    y_g = (end_y - start_y) / 12
 
     # Définit les valeurs de x (import quand on aura du 4/3).
     start_x = 0
@@ -219,7 +214,7 @@ def compareTab(a, b):
 
 def mediaOffLinePremiere(image) -> bool:
     """
-    Detecter "mediaoffline" Premiere.
+    Détecter "mediaoffline" Premiere.
 
     :param image:
     """
@@ -245,7 +240,7 @@ def mediaOffLineResolve(image) -> bool:
             'False') < 2:  # Marge d'erreur de 2 sur 25.
         if compareTab(MOLR100, image[start_y_g:end_y_g:y_g, start_x_g:end_x_g:x_g]).count(
                 'False') < 10:  # Marge d'erreur de 10 sur 100.
-            # Egalite des deux matrices + la soustraction des deux doit donner moins de 500 :
+            # Égalité des deux matrices + la soustraction des deux doit donner moins de 500 :
             if compareTab(MOLR, image).count('False') < 150:  # Marge d'erreur de 150 sur 1920*1080
                 return False
             else:
@@ -350,29 +345,31 @@ def close() -> None:
 # On ne lance le programme que si la licence est OK.
 if fct.licence():
     # Note : Normalement décode du Pro Res 422HQ ! :)
-    cf = ChoixFichier()
-    fichier = cf.getFilename()
+    cf_ui = cf.ChoixFichierVideo()
+    cf_ui.show()
+    fichier = cf_ui.getFilename()
     print('fichier: ' + fichier)
     print('Start tc: ' + fct.startTimeCodeFile(ffmpeg, fichier))
     reader = imageio.get_reader(fichier, ffmpeg_params=['-an'])
 
-    framerate = int(cfr.getFramerate())
+    # Récupère les informations concernant le fichier.
+    metadonnees = MetaData(fichier)
+    framerate = metadonnees.framerate()
 
     # Note: [-1] = dernier element de la liste.
-    r.rapport(fichier.split('/')[-1], 'html')
+    r.rapport(fichier.split('/')[-1], True, 'html')
 
-    r.setRapport("== Debut du rapport ==\n")
-
+    cr.show()
     ratio = cr.getRatio()
 
     # Choix du ratio :
     setRatio(ratio)
     duree = reader.get_length()
     endtc_frame = duree - 1
-    print('Ratio: ' + str(ratio))
+    print('Ratio: ' + ratio)
 
-    ctc.setTimecodeIn(starttc_frame)
-    ctc.setTimecodeOut(endtc_frame)
+    ctc.setTimecodeIn(str(starttc_frame))
+    ctc.setTimecodeOut(str(endtc_frame))
 
     # Choix du timecode (debut et fin) à vérifier :
     ctc.fenetre()
@@ -380,13 +377,13 @@ if fct.licence():
     starttc_frame = ctc.getTimecodeIn()
     endtc_frame = ctc.getTimecodeOut()
 
-    r.start(fichier, str(duree), '0', framerate, str(ratio))
+    r.setInformations(duree, '00:00:00:00', framerate, ratio)
 
     # Choix des vérifications : noirs, drop, mediaoffline...
     # Chaque iteration équivaut à une image :
-    for i, image in enumerate(reader):
+    for i, image in enumerate(reader, start=0):
 
-        # Met à jour la liste des erreurs (pour avoir un group de tc pour une erreur):
+        # Met à jour la liste des erreurs (pour avoir un group de tc pour une erreur) :
         updateListeProbleme(i)
 
         # Affiche l'avancement tous les 24 images :
@@ -406,7 +403,7 @@ if fct.licence():
         # Drop de Resolve ?
         # elif not DropResolve(image):
         #    Probleme("Drop Resolve", i)
-        # Si l'image n'est pas un média offline ou drop sur toutes l'image, alors on peut s'interesser au blanking et/ou lignes utiles de l'image.
+        # Si l'image n'est pas un média offline ou drop sur toute l'image, alors on peut s'intéresser au blanking et/ou lignes utiles de l'image.
         else:
             if not ligneHautImage(image):
                 addProbleme('Ligne noir en haut de l\'image', i)
@@ -420,7 +417,7 @@ if fct.licence():
             if not colonneDroiteImage(image):
                 addProbleme('Colonne noire à droite de l\'image', i)
 
-            # On ne vérifie les bandes noires que si on est pas du 1.77 et que l'image n'est pas noir:
+            # On ne vérifie les bandes noires que si on n'est pas du 1.77 et que l'image n'est pas noir :
             if ratio != '1.77':
                 if not blankingHaut(image):
                     addProbleme('Les blankings du haut ne sont pas noirs', i)
