@@ -112,7 +112,7 @@ def connect() -> None:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             id_rapport_comparaison INTEGER,
             fichier2_timecode_in TEXT,
-            fichier2_timecode_in TEXT,
+            fichier2_timecode_out TEXT
         )
         ''')
 
@@ -123,7 +123,7 @@ def connect() -> None:
             duree INTEGER,
             start_timecode TEXT,
             framerate TEXT,
-            ratio TEXT,
+            ratio TEXT
         )
         ''')
 
