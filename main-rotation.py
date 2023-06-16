@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier: Main (+ les fonctions...)
-# Version: 0.9.0
+# Fichier: Main
 
 # == IMPORTS ==
-
-import subprocess as sp
 import ChoixRatioListe as cr
 import sys
 
@@ -14,26 +11,15 @@ import imageio
 import numpy as np
 from timecode import Timecode
 
-import ChoixFichier as cf  # Programme qui choisi le fichier a analyser.
-import ServeurDate as date
-import TimecodeP as tc
-import Rapport as r
+import ChoixFichierVideo as cf  # Programme qui choisi le fichier à analyser.
+import ChoixRatioListe as cr
+import fonctions as fct
+import Rapport as rapport
 from outils.metadata import MetaData
 
 # == VALEURS ==
 
-# Si on peut utiliser le programme
-licence = None
-
-# Se connecte pour voir si on depasse la limite d'utilisation du programme:
-if int(date.Aujourdhui()) <= 20211225:
-    print("Licence OK")
-    licence = True
-else:
-    print("Licence depassee/!\\")
-    licence = False
-
-# == Declaration variables: ==
+# == Déclaration variables: ==
 ratio = None
 
 starttc = None
@@ -52,7 +38,7 @@ framerate = None
 
 option_afficher = ""  # Valeur du ratio.
 
-# Liste des erreurs: tc in | tc out | erreur | option
+# Liste des erreurs : tc in | tc out | erreur | option
 list_tc_in = np.array([])
 list_tc_out = np.array([])
 list_erreur = np.array([])
@@ -61,7 +47,7 @@ liste_option = np.array([])
 # Coefficient appliqué à certains chiffre. Les calcules sont basé sur de la HD, donc souvent, x2 pour de l'UHD (calcule en ligne et non intégralité image).
 coefficient_resolution = 1
 
-# Fichier pour rapport:
+# Fichier pour rapport :
 file = None
 
 # Numéro d'erreur
@@ -70,22 +56,22 @@ num_erreur = 0
 
 # == FONCTIONS ==
 
-# Met a jour la liste des erreurs pour ecrire dans le rapport:
-def UpdateListeProbleme(numImage):
+# Met à jour la liste des erreurs pour écrire dans le rapport :
+def updateListeProbleme(numImage):
     global list_tc_in, list_tc_out, list_erreur, liste_option, num_erreur
 
-    # Parcoure la liste des problemes, si tc out discontinu, alors on ecrit dans le rapport.
+    # Parcoure la liste des problèmes, si tc out discontinu, alors on écrit dans le rapport.
     for i in range(0, np.size(list_tc_in)):
         if i < np.size(list_tc_in) and list_tc_out[i] != (numImage - 1):
             num_erreur = num_erreur + 1
             print(str(num_erreur) + " / " + str(int(list_tc_in[i])) + " : update liste, on ajoute une erreur!")
-            # On ecrit dans le rapport l'erreur:
+            # On écrit dans le rapport l'erreur :
 
             # La notion de temps en timecode
             # La notion de temps en image
-            r.addProbleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]), str(liste_option[i]))
+            rapport.addProbleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]), str(liste_option[i]))
 
-            # On supprime de la liste l'erreur:
+            # On supprime de la liste l'erreur :
             list_tc_in = np.delete(list_tc_in, i)
             list_tc_out = np.delete(list_tc_out, i)
             list_erreur = np.delete(list_erreur, i)
@@ -94,20 +80,20 @@ def UpdateListeProbleme(numImage):
             i -= 1
 
 
-# Quand on doit reporter un probleme dans le rapport:
-def Probleme(message, option, numImage):
+# Quand on doit reporter un problème dans le rapport :
+def addProbleme(message, option, numImage):
     global list_tc_in, list_tc_out, list_erreur, liste_option
 
-    # Si c'est une nouvelle erreur:
+    # Si c'est une nouvelle erreur :
     new = True
 
-    # Si l'erreur est dans la liste:
+    # Si l'erreur est dans la liste :
     for i in range(0, np.size(list_tc_in, 0)):
         if list_erreur[i] == message:
             list_tc_out[i] = numImage  # Met a jour le tc out
             new = False
 
-    # Sinon, on ajoute le probleme a la liste:
+    # Sinon, on ajoute le problème a la liste :
     if new:
         # Dans append, on spécifie le tableau à qui on ajoute une valeur.
         list_tc_in = np.append(list_tc_in, numImage)
@@ -116,7 +102,7 @@ def Probleme(message, option, numImage):
         liste_option = np.append(liste_option, option)
 
 
-# On définit le ratio et on prepare les matrices d'analyse de l'image:
+# On définit le ratio et on prépare les matrices d'analyse de l'image :
 def setRatio(ratio_tmp, resolution_tmp):
     global ratio, coefficient_resolution
 
@@ -143,7 +129,7 @@ def setRatio(ratio_tmp, resolution_tmp):
 
             x_debut_gauche = 0
             x_debut_droite = 1919
-        # Pour l'instant, car UHD:
+        # Pour l'instant, car UHD :
         else:
             y_debut_haut = 277
             y_debut_bas = 1883
@@ -151,7 +137,7 @@ def setRatio(ratio_tmp, resolution_tmp):
             x_debut_gauche = 0
             x_debut_droite = 3839
 
-            # l'UHD a un coefficien x2:
+            # l'UHD a un coefficient x2 :
             coefficient_resolution = 2
 
     # Ligne utile en 2.00 1920x1080
@@ -195,7 +181,7 @@ def setRatio(ratio_tmp, resolution_tmp):
 
             x_debut_gauche = 0
             x_debut_droite = 1919
-        # Pour l'instant, car UHD:
+        # Pour l'instant, car UHD :
         else:
             y_debut_haut = 0
             y_debut_bas = 2159
@@ -203,7 +189,7 @@ def setRatio(ratio_tmp, resolution_tmp):
             x_debut_gauche = 0
             x_debut_droite = 3839
 
-            # l'UHD a un coefficien x2:
+            # l'UHD a un coefficient x2 :
             coefficient_resolution = 2
 
     # Ligne utile en 1.77 1920x1080
@@ -236,7 +222,7 @@ def set_option_image(pixels, image):
     option_afficher += "total image sum : " + str(image.sum()) + "<br>"
 
 
-# Calcule s'il y aurait un défaut de rotation sur base d'une liste de pixel renseigné:
+# Calcule s'il y a un défaut de rotation sur base d'une liste de pixel renseigné :
 # On calcule sur base de la somme de la valeur des pixels, si c'est (presque) noir, alors c'est considéré comme une erreur.
 def calcule_rotation(pixels):
     sum = pixels.sum()
@@ -250,7 +236,7 @@ def calcule_rotation(pixels):
         return False
 
 
-# Verifie que la ligne de l'image utile du haut est bien codée (cas 2.39):
+# Vérifie que la ligne de l'image utile du haut est bien codée (cas 2.39) :
 def noir_haut_gauche(image):
     global option_afficher, y_debut_haut, x_debut_gauche
 
@@ -265,7 +251,7 @@ def noir_haut_gauche(image):
     return calcule_rotation(pixels)
 
 
-# Verifie que la ligne de l'image utile du bas est bien codée (cas 2.39):
+# Vérifie que la ligne de l'image utile du bas est bien codée (cas 2.39) :
 def noir_haut_droite(image, i):
     global option_afficher, y_debut_haut, x_debut_droite
 
@@ -280,7 +266,7 @@ def noir_haut_droite(image, i):
     return calcule_rotation(pixels)
 
 
-# Verifie que la colonne de gauche de l'image utile est bien codée (cas 2.39):
+# Vérifie que la colonne de gauche de l'image utile est bien codée (cas 2.39) :
 def noir_bas_gauche(image):
     global option_afficher, y_debut_bas, x_debut_gauche
 
@@ -295,7 +281,7 @@ def noir_bas_gauche(image):
     return calcule_rotation(pixels)
 
 
-# Vérifie que la colonne de droite de l'image utile est bien codée (cas 2.39):
+# Vérifie que la colonne de droite de l'image utile est bien codée (cas 2.39) :
 def noir_bas_droite(image):
     global option_afficher, y_debut_bas, x_debut_droite
 
@@ -310,26 +296,28 @@ def noir_bas_droite(image):
     return calcule_rotation(pixels)
 
 
-# Cloturer l'analyse d'une video (en cloturant son flux ainsi que celui du rapport):
+# Clôturer l'analyse d'une video (en clôturant son flux ainsi que celui du rapport) :
 def close():
-    global i_global, reader, r
+    global i_global, reader
     # On récupère les dernières valeurs de la liste.
-    UpdateListeProbleme(i_global)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
+    updateListeProbleme(i_global)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
 
-    # On cloture tous les flux:
+    # On clôture tous les flux :
     reader.close()
-    r.close()
+    rapport.close()
 
 
 i_global = 0
 
 # == MAIN ==
 # On ne lance le programme que si la licence est OK.
-if licence:
-    fichier = cf.filename.get()
-    print("fichier: " + str(fichier))
+if fct.licence():
+    cf_ui = cf.ChoixFichierVideo()
+    cf_ui.show()
+    fichier = cf_ui.getFilename()
+    print("fichier : " + str(fichier))
 
-    # Image quoi? RGB/NB??? En fait, cette information est importante...
+    # Image quoi ? RGB/NB??? En fait, cette information est importante...
     reader = imageio.get_reader(fichier, ffmpeg_params=["-an"])
 
     # Récupère les informations concernant le fichier.
@@ -341,11 +329,10 @@ if licence:
     # framerate = int(cfr.getFramerate())
     framerate = metadonnees.framerate()  # int(24)
 
-    # ratio= cr.getRatio()
-    ratio = cr.getRatio()  # '2;39'
+    # Choix du ratio :
+    cr.show()
+    ratio = cr.getRatio()  # '2.39'
 
-    # Choix du ratio:
-    # setRatio(ratio, )
     resolution = metadonnees.resolution()  # '3840x2160'
 
     setRatio(ratio, resolution)
@@ -359,64 +346,53 @@ if licence:
     print("Framerate: " + str(framerate))
 
     # Note: [-1] = dernier element de la liste.
-    r.Rapport(fichier.split('/')[-1], "html")
+    rapport.rapport(fichier.split('/')[-1], True, 'html')
 
     print('Projet en cours :')
-    print(r.projet_en_cours())
+    print(rapport.getProjetEnCours())
 
     endtc_frame = duree_image - 1
     print("Ratio: " + str(ratio))
 
-    # ctc.setTimecodeIn(starttc_frame)
-    # ctc.setTimecodeOut(endtc_frame)
-
-    # Choix du timecode (debut et fin) a verifier:
-    # ctc.Fenetre()
-
-    # starttc_frame= ctc.getTimecodeIn()
-    # endtc_frame= ctc.getTimecodeOut()
-
-    # On vérifie l'intégralité du fichier:
+    # On vérifie l'intégralité du fichier :
     starttc_frame = starttc_frame
     endtc_frame = endtc_frame
 
-    r.Start(fichier, duree_image, start_tc, framerate, str(ratio), resolution)
+    rapport.setInformations(duree_image, start_tc, framerate, resolution, str(ratio))
 
-    # Chaque iteration équivaut à une image:
-    # On reprends où on s'est arrêté.
+    # Chaque iteration équivaut à une image :
+    # On reprend où on s'est arrêté.
     for i, image in enumerate(reader, start=0):
 
         i_global = i
 
-        # Met a jout la liste des erreurs (pour avoir un groupe de tc pour une erreur):
-        UpdateListeProbleme(i)
+        # Met à jour la liste des erreurs (pour avoir un groupe de tc pour une erreur) :
+        updateListeProbleme(i)
 
-        # Affiche l'avancement tous les 30 secondes:
+        # Affiche l'avancement tous les 30 secondes :
         if (i % (framerate * 30)) == 0:
             print(str(i) + " / " + str(duree_image))
-            r.savestate(i)
+            rapport.savestate(i)
 
-        # On saut le noir.
+        # On saute le noir.
         if image.max() > 0:
             if noir_haut_gauche(image):
-                Probleme("Défaut rotation en <strong>haut/gauche</strong>.", str(option_afficher), i)
+                addProbleme("Défaut rotation en <strong>haut/gauche</strong>.", str(option_afficher), i)
 
             if noir_haut_droite(image, i):
-                Probleme("Défaut rotation en <strong>haut/droite</strong>.", str(option_afficher), i)
+                addProbleme("Défaut rotation en <strong>haut/droite</strong>.", str(option_afficher), i)
 
             if noir_bas_gauche(image):
-                Probleme("Défaut rotation en <strong>bas/gauche</strong>.", str(option_afficher), i)
+                addProbleme("Défaut rotation en <strong>bas/gauche</strong>.", str(option_afficher), i)
 
             if noir_bas_droite(image):
-                Probleme("Défaut rotation en <strong>bas/droite</strong>.", str(option_afficher), i)
+                addProbleme("Défaut rotation en <strong>bas/droite</strong>.", str(option_afficher), i)
 
     # On récupère les dernières valeurs de la liste.
-    UpdateListeProbleme(i_global)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
+    updateListeProbleme(i_global)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
 
-    # On cloture tous les flux:
+    # On clôture tous les flux :
     reader.close()
-    r.close()
-
-# close()
+    rapport.close()
 
 # == END ==
