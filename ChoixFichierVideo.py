@@ -6,7 +6,7 @@ from tkinter import *
 from tkinter.filedialog import askopenfilename
 
 
-class ChoixFichier:
+class ChoixFichierVideo:
     """
     Permet de choisir (graphiquement) le fichier à analyser.
     """
