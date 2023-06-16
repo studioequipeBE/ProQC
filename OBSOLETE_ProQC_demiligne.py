@@ -1,30 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Main (+ les fonctions...)
+# Fichier : Main
 
 # == IMPORTS ==
 import imageio
 import numpy as np
 import os
-import subprocess as sp
 import timecode as Timecode
 
-import ChoixFichier as cf  # Programme qui choisi le fichier à analyser.
+import ChoixFichierVideo as cf  # Programme qui choisi le fichier à analyser.
 import ChoixFramerateListe as cfr
 import ChoixRatioListe as cr
 import ChoixResolutionListe as cre
 import fonctions as fct
-import ServeurDate as date
 import Rapport as r
 import TimecodeP as tc
 
-ffmpeg = 'C:\\ffmpeg\\ffmpeg.exe'
-
+ffmpeg = fct.getFFmpeg()
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
-# == Declaration variables: ==
 ratio = None
 
 starttc = None
@@ -46,19 +42,15 @@ option_afficher = ''  # Valeur du ratio.
 # Liste des erreurs : tc in | tc out | erreur | option
 list_tc_in = np.array([])
 list_tc_out = np.array([])
-liste_option = np.array([])
 list_erreur = np.array([])
+liste_option = np.array([])
 
 # Coefficient appliqué à certains chiffre. Les calcules sont basé sur de la HD, donc souvent, x2 pour de l'UHD (calcule en ligne et non intégralité image).
 coefficient_resolution = 1
 
-# Fichier pour rapport :
-file = None
-
 # Numéro d'erreur
 num_erreur = 0
 
-delta_high = 255.0 * 0.05  # Le delta maximum qu'il peut y avoir entre les plus hautes valeurs (en 8bit).
 delta = 0.21  # Delta qu'on tolère pour la moyenne.
 delta_min = 1 - delta  # Delta min
 delta_max = 1 + delta  # Delta max
@@ -80,7 +72,7 @@ def updateListeProbleme(num_image: int) -> None:
             print(str(num_erreur) + ' / ' + str(list_tc_in[i]) + " : update liste, on ajoute une erreur!")
             # On écrit dans le rapport l'erreur :
 
-            # La notion de temps en timecode
+            # La notion de temps en timecode.
             # r.setRapport(str(TcActuel(list_tc_in[i], framerate)) + " a " + str(TcActuel(list_tc_out[i], framerate)) + ": " + str(list_erreur[i]) + "\n")
             # La notion de temps en image.
             # r.setRapport(str(int(list_tc_in[i])) + " a " + str(int(list_tc_out[i])) + ": " + str(list_erreur[i]) + "\n")
@@ -99,7 +91,7 @@ def addProbleme(message: str, option: str, num_image: int) -> None:
     """
     Quand on doit reporter un problème dans le rapport.
 
-    :param STR message: Le message.
+    :param str message: Le message.
     :param str option:
     :param int num_image : Numéro d'image.
     """
@@ -116,18 +108,18 @@ def addProbleme(message: str, option: str, num_image: int) -> None:
 
     # Sinon, on ajoute le problème à la liste :
     if new:
-        # On ajoute, on spécifie le tableau à qui on ajoute une valeur.
+        # Quand on ajoute, on spécifie le tableau à qui on ajoute une valeur.
         list_tc_in = np.append(list_tc_in, num_image)
         list_tc_out = np.append(list_tc_out, num_image)
-        liste_option = np.append(liste_option, option)
         list_erreur = np.append(list_erreur, message)
+        liste_option = np.append(liste_option, option)
 
 
-def setRatio(ratio_tmp, resolution_tmp) -> None:
+def setRatio(ratio_tmp: str, resolution_tmp) -> None:
     """
     On définit le ratio et on prépare les matrices d'analyse de l'image.
 
-    :param ratio_tmp:
+    :param str ratio_tmp:
     :param resolution_tmp:
     """
     global ratio, coefficient_resolution, y_debut_haut, y_debut_bas, x_debut_gauche, x_debut_droite
@@ -226,10 +218,10 @@ def demiLigne(ligne_utile, ligne_avant) -> bool:
     """
     Commun entre les différents défauts.
 
-    :param ligne_utile:
-    :param ligne_avant:
+    :param ligne_utile: Ligne dans l'image.
+    :param ligne_avant: Ligne "avant" la dernière ligne utile.
     """
-    global delta_high, delta_min, delta_max, coefficient_resolution
+    global delta_min, delta_max, coefficient_resolution
     # Les sommes :
     ligne_utile_sum = ligne_utile.sum()
     ligne_avant_sum = ligne_avant.sum()
@@ -274,8 +266,6 @@ def demiLigne(ligne_utile, ligne_avant) -> bool:
 
             # Si après toutes ces vérifications ce n'est toujours pas bon, alors la ligne est considéré avec le défaut.
             else:
-                # On désactive l'affichage des options :
-                # setOption(ligne_utile_sum, ligne_avant_sum, ligne_utile_min, ligne_avant_min, ligne_utile_mean, ligne_avant_mean, ligne_utile_max, ligne_avant_max)
                 return False
 
 
@@ -285,8 +275,7 @@ def demiLigneHaut(image) -> bool:
 
     :param image:
     """
-    global delta_high
-    ligne_utile = image[y_debut_haut:(y_debut_haut + 1):1, y_debut_haut:y_debut_bas:1]  # Ligne limite
+    ligne_utile = image[y_debut_haut:(y_debut_haut + 1):1, y_debut_haut:y_debut_bas:1]  # Ligne limite.
     ligne_avant = image[(y_debut_haut + 1):(y_debut_haut + 2):1, y_debut_haut:y_debut_bas:1]
 
     return demiLigne(ligne_utile, ligne_avant)
@@ -298,8 +287,7 @@ def demiLigneBas(image) -> bool:
 
     :param image:
     """
-    global delta_high
-    ligne_utile = image[y_debut_bas:(y_debut_bas + 1):1, y_debut_haut:y_debut_bas:1]  # Ligne limite
+    ligne_utile = image[y_debut_bas:(y_debut_bas + 1):1, y_debut_haut:y_debut_bas:1]  # Ligne limite.
     ligne_avant = image[(y_debut_bas - 1):y_debut_bas:1, y_debut_haut:y_debut_bas:1]
 
     return demiLigne(ligne_utile, ligne_avant)
@@ -312,7 +300,7 @@ def demiLigneGauche(image) -> bool:
     :param image:
     """
     global ligne_utile
-    ligne_utile = image[y_debut_haut:y_debut_bas:1, x_debut_gauche:(x_debut_gauche + 1):1]  # Ligne limite
+    ligne_utile = image[y_debut_haut:y_debut_bas:1, x_debut_gauche:(x_debut_gauche + 1):1]  # Ligne limite.
     ligne_avant = image[y_debut_haut:y_debut_bas:1, (x_debut_gauche + 1):(x_debut_gauche + 2):1]
 
     return demiLigne(ligne_utile, ligne_avant)
@@ -324,8 +312,7 @@ def demiLigneDroite(image) -> bool:
 
     :param image:
     """
-    global delta_high
-    ligne_utile = image[y_debut_haut:y_debut_bas:1, x_debut_droite:(x_debut_droite + 1):1]  # Ligne limite
+    ligne_utile = image[y_debut_haut:y_debut_bas:1, x_debut_droite:(x_debut_droite + 1):1]  # Ligne limite.
     ligne_avant = image[y_debut_haut:y_debut_bas:1, (x_debut_droite - 1):x_debut_droite:1]
 
     return demiLigne(ligne_utile, ligne_avant)
@@ -349,16 +336,19 @@ i_global = 0
 # == MAIN ==
 # On ne lance le programme que si la licence est OK.
 if fct.licence():
-    fichier = cf.filename.get()
-    print('fichier: ' + str(fichier))
-    print('Start tc: ' + str(fct.startTimeCodeFile(ffmpeg, fichier)))
+    cf_ui = cf.ChoixFichierVideo()
+    cf_ui.show()
+    fichier = cf_ui.getFilename()
+    print('fichier : ' + str(fichier))
+    start_tc = fct.startTimeCodeFile(ffmpeg, fichier)
+    print('Start tc : ' + start_tc)
 
     # Image quoi ? RGB/NB??? En fait, cette information est importante...
     reader = imageio.get_reader(fichier, ffmpeg_params=['-an'])
 
     framerate = int(cfr.getFramerate())
 
-    print('Framerate: ' + str(framerate))
+    print('Framerate : ' + str(framerate))
 
     # Note: [-1] = dernier element de la liste.
     r.Rapport(fichier.split('/')[-1], 'html')
@@ -368,37 +358,29 @@ if fct.licence():
     ratio = cr.getRatio()
 
     # Choix du ratio :
-    setRatio(ratio, cre.getResolution())
-    duree = reader.get_length()
-    endtc_frame = duree - 1
-    print('Ratio: ' + str(ratio))
-
-    # ctc.setTimecodeIn(starttc_frame)
-    # ctc.setTimecodeOut(endtc_frame)
-
-    # Choix du timecode (debut et fin) a verifier:
-    # ctc.Fenetre()
-
-    # starttc_frame= ctc.getTimecodeIn()
-    # endtc_frame= ctc.getTimecodeOut()
+    resolution = cre.getResolution()
+    setRatio(ratio, resolution)
+    duree_image = reader.get_length()
+    endtc_frame = duree_image - 1
+    print('Ratio : ' + ratio)
 
     # On vérifie l'intégralité du fichier :
     starttc_frame = starttc_frame
     endtc_frame = endtc_frame
 
-    r.Start(fichier, str(duree), str(fct.startTimeCodeFile(ffmpeg, fichier)), framerate, str(ratio))
+    r.Start(fichier, duree_image, start_tc, framerate, ratio, resolution)
 
     # Chaque iteration équivaut à une image :
-    for i, image in enumerate(reader):
+    for i, image in enumerate(reader, start=0):
 
         i_global = i
 
         # Met à jour la liste des erreurs (pour avoir un groupe de tc pour une erreur) :
         updateListeProbleme(i)
 
-        # Affiche l'avancement tous les 10 secondes :
+        # Affiche l'avancement tous les 30 secondes :
         if (i % (framerate * 30)) == 0:
-            print(str(i) + ' / ' + str(duree))
+            print(str(i) + ' / ' + str(duree_image))
 
         if not demiLigneHaut(image):
             addProbleme('Demi ligne <strong>haut</strong>.', str(option_afficher), i)
@@ -418,7 +400,5 @@ if fct.licence():
     # On clôture tous les flux :
     reader.close()
     r.close()
-
-# close()
 
 # == END ==
