@@ -4,15 +4,13 @@
 # Fichier : il gère le rapport.
 # Export aussi une version JSON pour faciliter les traitements.
 # Backup dans une base de données SQLite le traitement en cours.
-# Version: 1.1.1
-
-import os
-import sqlite3
-from typing import NoReturn
-
-from timecode import Timecode
 
 # == IMPORTS ==
+import os
+import sqlite3
+from timecode import Timecode
+from typing import NoReturn
+
 import TimecodeP as tc
 
 # == ATTRIBUTS ==
@@ -49,13 +47,13 @@ timecodestart_ = None
 # == FONCTIONS ==
 # Création du rapport en .txt ou HTML, on pourrait faire un rapport en HTML, plus classe voir ajouter les valeurs dans la base de donnees de QC! :)
 # Valeur de type_tmp= {txt, html}
-def Rapport(fichier, type_tmp="txt") -> NoReturn:
+def Rapport(fichier, type_tmp='txt') -> NoReturn:
     global type_, file_, chemin_rapport, db, cur, fichier_tmp
 
     fichier_tmp = fichier
     type_ = type_tmp
 
-    # On créé dans la base de données, isolation_level en None = autocommit.
+    # On crée dans la base de données, isolation_level en None = autocommit.
     db = sqlite3.connect('data.db', isolation_level=None)
     cur = db.cursor()
 
@@ -84,7 +82,7 @@ def Start(fichier: str, duree_image: int, timecodestart: str = "00:00:00:00", fr
     timecodestart_ = timecodestart
 
     framerate = int(framerate_)
-    resolution= resolution_
+    resolution = resolution_
 
     tc_debut = int(Timecode(framerate, timecodestart_).frames - 1)
 
@@ -95,7 +93,7 @@ def Start(fichier: str, duree_image: int, timecodestart: str = "00:00:00:00", fr
     # Récupère l'ID de la dernière entrée :
     id_projet = cur.lastrowid
 
-    # Si on écrit un fichier texte:
+    # Si on écrit un fichier texte :
     if type_ == "txt":
         file_.write("Fichier: " + fichier + "\n")
         file_.write("Durée: " + str(duree_image) + " image(s) (TC " + tc.frames_to_timecode(duree_image, framerate) + ")\n")
@@ -107,45 +105,11 @@ def Start(fichier: str, duree_image: int, timecodestart: str = "00:00:00:00", fr
             file_.write("Timecode début: inconnu\n")
         file_.write("Framerate: " + str(framerate) + " i/s\n")
 
-    # Si on écrit un fichier HTML:
-    """elif type_ == "html":
-        file_.write("<p><strong>Fichier:</strong> " + fichier + "</p>\n")
-        file_.write("<p><strong>Ratio:</strong> " + ratio + "</p>\n")
-        print('Framerate : ' + str(framerate))
-        print('Durée : ' + str(tc.frames_to_timecode(duree_image, framerate)))
 
-        file_.write("<p><strong>Durée:</strong> " + str(duree_image) + " image(s) (TC " + tc.frames_to_timecode(duree_image, framerate) + ")</p>\n")
-
-        # Parfois l'affichage du TC bug quand le fichier vient du réseau.
-        try:
-            tc_debut= int(Timecode(framerate, timecodestart).frames - 1)
-            file_.write("<p><strong>Timecode début:</strong> " + timecodestart + " (" + str(tc_debut) + ")</p>\n")
-        except:
-            file_.write("<p><strong>Timecode début:</strong> <i>inconnu</i></p>\n")
-
-        file_.write("<p><strong>Framerate</strong>: " + str(framerate) + " i/s</p>\n")
-        file_.write("<table class= \"bord\">\n")
-        file_.write("<tr>")
-        file_.write("<th class= \"bord\">n°</th>")
-        file_.write("<th class= \"bord\">TC IN</th>")
-        file_.write("<th class= \"bord\">TC OUT</th>")
-        file_.write("<th class= \"bord\">REMARK</th>")
-        file_.write("<th class= \"bord\">OPTION</th>")
-        file_.write("</tr>\n")"""
-
-
-# Ecrire dans le rapport:
-"""def setRapport(message: str) -> NoReturn:
-    global file_
-
-    if type_ == "txt":
-        file_.write(message)
-    elif type_ == "html":
-        file_.write("<tr><td class= \"bord\">" + message + "</td></tr>\n")"""
-
-
-# Ecrire dans le rapport:
 def addProbleme(tc_in_image: int, tc_out_image: int, probleme: str, option: str) -> NoReturn:
+    """
+    Ajoute une erreur dans le rapport.
+    """
     global numero, framerate, tc_debut, id_projet
 
     tc_in_tc = tc.frames_to_timecode(int(tc_in_image)+tc_debut, framerate)
@@ -153,28 +117,25 @@ def addProbleme(tc_in_image: int, tc_out_image: int, probleme: str, option: str)
 
     cur.execute("INSERT INTO remarque VALUES ('" + str(id_projet) + "', '" + tc_in_tc + "', '" + tc_out_tc + "', '" + probleme + "', '" + option + "')")
 
-    """if type_ == "txt":
-        file_.write(message)
-    elif type_ == "html":
-        numero = numero + 1
-        file_.write("<tr><td class= \"bord\">" + str(numero) + "</td><td class= \"bord\">" + tc_in_tc + "</td><td class= \"bord\">" + tc_out_tc + "</td><td class= \"bord\">" + probleme + "</td><td class= \"bord\">" + option + "</td></tr>\n")
-    """
 
-
-# Indique jusqu'où on était dans le rapport s'il y a eu un crash.
 def savestate(num_image) -> NoReturn:
+    """
+    Indique jusqu'où on était dans le rapport s'il y a eu un crash.
+    """
     global cur, id_projet
     cur.execute('UPDATE projet SET image_analyse = "' + str(num_image) + '" WHERE id LIKE "' + str(id_projet) + '"')
 
 
-# Cloturer le flux du fichier de rapport:
 def close() -> NoReturn:
+    """
+    Clôturer le flux du fichier de rapport.
+    """
     global id_projet, file_, cur, fichier_tmp, type_, fichier_tmp, ratio_, duree_image_, timecodestart_, framerate, resolution
 
     # On indique que le fichier a fini d'être analysé.
     cur.execute('UPDATE projet SET statut = "fini" WHERE id LIKE "' + str(id_projet) + '"')
 
-    # Ecrit le fichier JSON depuis la base de données.
+    # Écrit le fichier JSON depuis la base de données.
     json = open(str(chemin_rapport) + "/JSON/rapport_" + str(fichier_tmp) + ".json", "w")
     json.write('{\n')
     json.write('\t"fichier" : "' + str(fichier_tmp) + '",\n')
@@ -188,7 +149,7 @@ def close() -> NoReturn:
 
     for row in cur.execute('SELECT * FROM remarque WHERE id_projet LIKE "' + str(id_projet) + '" ORDER BY tc_in, tc_out ASC'):
         print(row)
-        if i != 0 :
+        if i != 0:
             json.write(',\n')
         json.write('\t\t\t{\n')
         json.write('\t\t\t\t"tc_in" : "' + row[1]+'",\n')
@@ -204,18 +165,18 @@ def close() -> NoReturn:
     json.close()
 
     # Si demande un fichier texte, on l'écrit ici.
-    if type_ == "txt":
-        file_ = open(str(chemin_rapport) + "rapport_" + str(fichier_tmp) + ".txt", "w")
-        file_.write("")
+    if type_ == 'txt':
+        file_ = open(str(chemin_rapport) + 'rapport_' + str(fichier_tmp) + '.txt', 'w')
+        file_.write('')
 
         # file_.write(message)
 
-        file_.write("== Fin du rapport ==")
+        file_.write('== Fin du rapport ==')
         file_.close()
 
     # Si demande un fichier HTML, on l'écrit ici.
     elif type_ == "html":
-        file_ = open(str(chemin_rapport) + "rapport_" + str(fichier_tmp) + ".html", "w")
+        file_ = open(str(chemin_rapport) + 'rapport_' + str(fichier_tmp) + '.html', 'w')
         file_.write("<html>\n")
         file_.write("\t<head>\n")
         file_.write("\t\t<title>Rapport : " + str(fichier_tmp) + "</title>\n")
@@ -270,5 +231,5 @@ def close() -> NoReturn:
 
         file_.write("\t\t</table>\n")
         file_.write("\t</body>\n")
-        file_.write("</html>")
+        file_.write('</html>')
         file_.close()

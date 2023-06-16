@@ -8,22 +8,13 @@ import hashlib
 import imageio
 import numpy as np
 import os
-import platform
 import xml.etree.ElementTree as xmlparser
 
 import fonctions as fct
 import RapportComparaison as r
 
-ffmpeg = os.getcwd() + os.sep + 'modules' + os.sep
-match platform.system():
-    case 'Windows':
-        ffmpeg = ffmpeg + 'ffmpeg.exe'
-    case 'macOS':
-        ffmpeg = ffmpeg + 'ffmpeg'
 
-print('ffmpeg : ' + ffmpeg)
-
-os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
+os.environ['IMAGEIO_FFMPEG_EXE'] = fct.getFFmpeg()
 
 # == VALEURS ==
 

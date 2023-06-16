@@ -11,7 +11,6 @@ from tkinter.filedialog import askopenfilename
 FILETYPES = [('WAV', '*.wav')]
 
 root = Tk()
-
 filename = StringVar(root)
 
 

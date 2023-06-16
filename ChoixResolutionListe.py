@@ -46,10 +46,6 @@ def fenetre() -> None:
     bdd.close()
 
     fen = Pmw.initialise()
-    # bou= Button(fen, text= "Choisir", command= changeLabel)
-    # bou.grid(row= 1, column= 0, padx= 8, pady= 6)
-    # lab.grid(row= 1, column= 1, padx= 8)
-
     combo = Pmw.ComboBox(fen, labelpos=NW,
                          label_text='Choisissez la resolution :',
                          scrolledlist_items=liste_resolution,

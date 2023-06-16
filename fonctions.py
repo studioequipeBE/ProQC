@@ -1,8 +1,3 @@
-import subprocess as sp
-import timecode as Timecode
-import TimecodeP as tc
-
-
 def tcActuel(num_image: int, starttc: str, framerate: int = 24) -> str:
     """
     Donne le TC actuel à l'aide d'un nombre d'images et sur base d'un tc de départ.
@@ -11,6 +6,9 @@ def tcActuel(num_image: int, starttc: str, framerate: int = 24) -> str:
     :param str starttc: Timecode début.q
     :param int framerate: Framerate.
     """
+    import timecode as Timecode
+    import TimecodeP as tc
+
     tc1 = Timecode(framerate, starttc)
     if num_image > 0:
         # Comme le résultat est toujours une image en trop, j'enlève ce qu'il faut : :)
@@ -28,6 +26,8 @@ def startTimeCodeFile(ffmpeg: str, fichier: str) -> str:
     :param str ffmpeg: Où se trouve FFMPEG !
     :param str fichier: Le fichier.
     """
+    import subprocess as sp
+
     command = [ffmpeg, '-i', fichier]
     pipe = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
     pipe.stdout.readline()
@@ -43,10 +43,11 @@ def startTimeCodeFile(ffmpeg: str, fichier: str) -> str:
 
 
 def licence() -> bool:
-    import ServeurDate as date
     """
     Si on peut utiliser le programme.
     """
+    import ServeurDate as date
+
     # Se connecte pour voir si on dépasse la limite d'utilisation du programme :
     if int(date.aujourdhui()) <= 20230101:
         print('Licence OK')
@@ -54,3 +55,20 @@ def licence() -> bool:
     else:
         print('Licence depassee/!\\')
         return False
+
+
+def getFFmpeg() -> str:
+    """
+    Récupère le chemin de FFmpeg.
+    """
+    import platform
+    import os
+
+    chemin_ffmpeg = os.getcwd() + os.sep + 'modules' + os.sep
+    match platform.system():
+        case 'Windows':
+            chemin_ffmpeg += 'ffmpeg.exe'
+        case 'macOS':
+            chemin_ffmpeg += 'ffmpeg'
+
+    return chemin_ffmpeg

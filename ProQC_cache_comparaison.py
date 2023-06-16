@@ -12,8 +12,8 @@ import xml.etree.ElementTree as xmlparser
 
 import fonctions as fct
 
-ffmpeg = 'C:\\ffmpeg\\ffmpeg.exe'
 
+ffmpeg = fct.getFFmpeg()
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 

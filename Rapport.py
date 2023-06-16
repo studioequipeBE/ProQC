@@ -70,8 +70,8 @@ def setInformations(duree: int, timecodestart: str = '00:00:00:00', framerate: i
     framerateG = framerate
     # Si on écrit un fichier texte :
     if type_ == 'html':
-        file_.write("<p><strong>Durée :</strong> " + str(duree) + " image(s) (TC " + tc.frames_to_timecode(duree,
-                                                                                                           framerateG) + ")</p>\n")
+        file_.write("<p><strong>Durée :</strong> " + str(duree) + " image(s) (TC " +
+                    tc.frames_to_timecode(duree, framerateG) + ")</p>\n")
 
         # Parfois l'affichage du TC bug quand le fichier vient du réseau.
         try:
@@ -119,7 +119,7 @@ def addProbleme(tc_in: str, tc_out: str, remarque: str, option: str) -> None:
     :param str remarque: Le problème.
     :param str option: Les options.
     """
-    global numero, framerate, tc_debut, id_rapport
+    global numero, framerate, tc_debut, id_rapport, framerateG
 
     if type_ == 'html':
         numero = numero + 1

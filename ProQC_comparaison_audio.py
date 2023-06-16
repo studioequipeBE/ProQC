@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Main (+ les fonctions...)
+# Fichier : Main
 
 # == IMPORTS ==
 import numpy as np
-import subprocess as sp
+import os
 import timecode as Timecode
 
 import ChoixFichierAudio as cf  # Programme qui choisi le fichier à analyser.
@@ -14,6 +14,10 @@ import ChoixFramerateListe as cfr  # On doit définir le framerate pour avoir un
 import fonctions as fct
 import Rapport as r
 import TimecodeP as tc
+
+
+ffmpeg = fct.getFFmpeg()
+os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
 
@@ -44,23 +48,6 @@ num_erreur = 0
 
 
 # == FONCTIONS ==
-def tcActuel(num_image: int, framerate: int = 24) -> str:
-    """
-    Donne le TC actuel à l'aide d'un nombre d'images et sur base d'un tc de depart.
-
-    :param int num_image: Numéro d'image.
-    :param int framerate: Framerate.
-    """
-    tc1 = Timecode(framerate, starttc)
-    if num_image > 0:
-        # Comme le résultat est toujours une image en trop, j'enleve ce qu'il faut: :)
-        tc2 = Timecode(framerate, tc.frames_to_timecode((num_image - 1), framerate))
-        tc3 = tc1 + tc2
-        return tc3
-    else:
-        return tc1
-
-
 def updateListeProbleme(num_image: int) -> None:
     """
     Met à jour la liste des erreurs pour écrire dans le rapport.
@@ -118,25 +105,6 @@ def addProbleme(message: str, option: str, num_image: int) -> None:
         list_erreur = np.append(list_erreur, message)
 
 
-def startTimeCodeFile(fichier: str) -> str:
-    """
-    Timecode du fichier analyse.
-
-    :param str fichier: Le fichier.
-    """
-    global starttc
-    command = ['ffmpeg.exe', '-i', fichier, '-']
-    pipe = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
-    pipe.stdout.readline()
-    pipe.terminate()
-    infos = pipe.stderr.read()
-    tc = ''
-    for i in range(18, 29):
-        tc += infos[(infos.find('timecode') + i)]
-    starttc = tc
-    return tc
-
-
 def close() -> None:
     """
     Cloture l'analyse d'une video (en clôturant son flux ainsi que celui du rapport).
@@ -155,7 +123,8 @@ if fct.licence():
     cf.fenetre()
     fichier = cf.filename.get()
     print('fichier 1: ' + str(fichier))
-    print('- Start tc: ' + str(startTimeCodeFile(fichier)))
+    start_tc = fct.startTimeCodeFile(ffmpeg, fichier)
+    print('- Start tc: ' + start_tc)
 
     duree = 100
 
@@ -168,13 +137,13 @@ if fct.licence():
 
     print('- Framerate: ' + str(framerate))
 
-    r.start(fichier, str(duree), str(startTimeCodeFile(fichier)), framerate)
+    r.start(fichier, str(duree), start_tc, framerate)
 
     # Fichier 2:
     cf2.fenetre()
     fichier2 = cf2.filename.get()
     print('fichier 2: ' + str(fichier2))
-    print('- Start tc: ' + str(startTimeCodeFile(fichier2)))
+    print('- Start tc: ' + str(fct.startTimeCodeFile(ffmpeg, fichier2)))
 
 close()
 
