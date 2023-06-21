@@ -1,4 +1,4 @@
-def tcActuel(num_image: int, starttc: str, framerate: int = 24) -> str:
+def tc_actuel(num_image: int, starttc: str, framerate: int = 24) -> str:
     """
     Donne le TC actuel à l'aide d'un nombre d'images et sur base d'un tc de départ.
 
@@ -19,7 +19,7 @@ def tcActuel(num_image: int, starttc: str, framerate: int = 24) -> str:
         return tc1
 
 
-def startTimeCodeFile(ffmpeg: str, fichier: str) -> str:
+def start_timecode_file(ffmpeg: str, fichier: str) -> str:
     """
     Timecode du fichier analyse.
 
@@ -57,7 +57,7 @@ def licence() -> bool:
         return False
 
 
-def getFFmpeg() -> str:
+def get_ffmpeg() -> str:
     """
     Récupère le chemin de FFmpeg.
     """
