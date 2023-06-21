@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Main
+"""
+Main.
+"""
 
 # == IMPORTS ==
 import imageio
@@ -10,13 +12,13 @@ import os
 import sys
 from timecode import Timecode
 
-import ChoixFichierVideo as cf  # Programme qui choisi le fichier à analyser.
-import ChoixRatioListe as cr
+from ChoixFichier import ChoixFichier  # Programme qui choisi le fichier à analyser.
+from ChoixRatio import ChoixRatio
 import fonctions as fct
-import RapportDemiligne as rapport
+from RapportDemiligne import RapportDemiligne
 from outils.metadata import MetaData
 
-ffmpeg = fct.getFFmpeg()
+ffmpeg = fct.get_ffmpeg()
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
@@ -57,7 +59,7 @@ delta_max = 1 + delta  # Delta max
 
 
 # == FONCTIONS ==
-def updateListeProbleme(num_image: int) -> None:
+def update_liste_probleme(num_image: int) -> None:
     """
     Met à jour la liste des erreurs pour écrire dans le rapport.
 
@@ -72,7 +74,7 @@ def updateListeProbleme(num_image: int) -> None:
             print(str(num_erreur) + ' / ' + str(list_tc_in[i]) + " : update liste, on ajoute une erreur!")
             # On écrit dans le rapport l'erreur :
             # La notion de temps en image.
-            rapport.addProbleme(int(list_tc_in[i]), int(list_tc_out[i]), str(list_erreur[i]), str(liste_option[i]))
+            rapport.add_probleme(int(list_tc_in[i]), int(list_tc_out[i]), str(list_erreur[i]), str(liste_option[i]))
 
             # On supprime de la liste l'erreur :
             list_tc_in = np.delete(list_tc_in, i)
@@ -83,7 +85,7 @@ def updateListeProbleme(num_image: int) -> None:
             i -= 1
 
 
-def addProbleme(message: str, option: str, num_image: int) -> None:
+def add_probleme(message: str, option: str, num_image: int) -> None:
     """
     Quand on doit reporter un problème dans le rapport.
 
@@ -111,7 +113,7 @@ def addProbleme(message: str, option: str, num_image: int) -> None:
         liste_option = np.append(liste_option, option)
 
 
-def setRatio(ratio_tmp: str, resolution_tmp) -> None:
+def set_ratio(ratio_tmp: str, resolution_tmp) -> None:
     """
     On définit le ratio et on prépare les matrices d'analyse de l'image.
 
@@ -122,96 +124,152 @@ def setRatio(ratio_tmp: str, resolution_tmp) -> None:
 
     ratio = ratio_tmp
 
+    debut_HD_x = 0
+    fin_HD_x = 1919
+    debut_HD_y = 0
+    fin_HD_y = 1079
+
+    debut_UHD_x = 0
+    fin_UHD_x = 3839
+    debut_UHD_y = 0
+    fin_UHD_y = 2139
+
+    if resolution_tmp == '3840x2160':
+        # L'UHD a un coefficient x2 :
+        coefficient_resolution = 2
+
     # Ligne utile en 2.00 1920x1080
     if ratio == '2.40':
         if resolution_tmp == '1920x1080':
-            y_debut_haut = 140
-            y_debut_bas = 939
+            y_debut_haut = 140  # (1080 - (1920/2.4)) = 240 / 2 = 140
+            y_debut_bas = 939  # (1080 - 140) = 940 - 1
 
-            x_debut_gauche = 0
-            x_debut_droite = 1919
+            x_debut_gauche = debut_HD_x
+            x_debut_droite = fin_HD_x
+        elif resolution_tmp == '3840x2160':
+            y_debut_haut = 280
+            y_debut_bas = 1879
+
+            x_debut_gauche = debut_UHD_x
+            x_debut_droite = fin_UHD_x
         else:
             sys.exit("Le ratio n'est pas disponible pour cette résolution.")
 
     # Ligne utile en 2.39 1920x1080
     elif ratio == '2.39':
         if resolution_tmp == '1920x1080':
-            y_debut_haut = 138
-            y_debut_bas = 941
+            y_debut_haut = 138  # (1080 - (1920/2.39)) = 276 / 2 = 138
+            y_debut_bas = 941  # (1080 - 138) = 942 - 1
 
-            x_debut_gauche = 0
-            x_debut_droite = 1919
-        # Pour l'instant, car UHD :
-        else:
+            x_debut_gauche = debut_HD_x
+            x_debut_droite = fin_HD_x
+        elif resolution_tmp == '3840x2160':
             y_debut_haut = 277
-            y_debut_bas = 1883
+            y_debut_bas = 1882  # (2160 - 277) = 1883 - 1
 
-            x_debut_gauche = 0
-            x_debut_droite = 3839
-
-            # L'UHD a un coefficient x2 :
-            coefficient_resolution = 2
+            x_debut_gauche = debut_UHD_x
+            x_debut_droite = fin_UHD_x
+        else:
+            sys.exit("Le ratio n'est pas disponible pour cette résolution.")
 
     # Ligne utile en 2.00 1920x1080
     elif ratio == '2.35':
         if resolution_tmp == '1920x1080':
-            y_debut_haut = 131
-            y_debut_bas = 948
+            y_debut_haut = 131  # (1080 - (1920/2.35)) = 262 / 2 = 131
+            y_debut_bas = 948  # (1080 - 131) = 949 - 1
 
-            x_debut_gauche = 0
-            x_debut_droite = 1919
+            x_debut_gauche = debut_HD_x
+            x_debut_droite = fin_HD_x
+        elif resolution_tmp == '3840x2160':
+            y_debut_haut = 263
+            y_debut_bas = 1923  # (2160 - 263) = 1924 - 1
+
+            x_debut_gauche = debut_UHD_x
+            x_debut_droite = fin_UHD_x
         else:
             sys.exit("Le ratio n'est pas disponible pour cette résolution.")
 
     # Ligne utile en 2.00 1920x1080
     elif ratio == '2.00':
         if resolution_tmp == '1920x1080':
-            y_debut_haut = 60
-            y_debut_bas = 1019
+            y_debut_haut = 60  # (1080 - (1920/2.00)) = 120 / 2 = 60
+            y_debut_bas = 1019  # (1080 - 60) = 1020 - 1
 
-            x_debut_gauche = 0
-            x_debut_droite = 1919
+            x_debut_gauche = debut_HD_x
+            x_debut_droite = fin_HD_x
+        elif resolution_tmp == '3840x2160':
+            y_debut_haut = 120
+            y_debut_bas = 2039  # (2160 - 120) = 2040 - 1
+
+            x_debut_gauche = debut_UHD_x
+            x_debut_droite = fin_UHD_x
         else:
             sys.exit("Le ratio n'est pas disponible pour cette résolution.")
 
     # Ligne utile en 1.85 1920x1080
     elif ratio == '1.85':
         if resolution_tmp == '1920x1080':
-            y_debut_haut = 21
-            y_debut_bas = 1058
+            y_debut_haut = 21  # (1080 - (1920/1.85)) = 42 / 2 = 21
+            y_debut_bas = 1058  # (1080 - 21) = 1059 - 1
 
-            x_debut_gauche = 0
-            x_debut_droite = 1919
+            x_debut_gauche = debut_HD_x
+            x_debut_droite = fin_HD_x
+        elif resolution_tmp == '3840x2160':
+            y_debut_haut = 42
+            y_debut_bas = 2117  # (2160 - 42) = 2118 - 1
+
+            x_debut_gauche = debut_UHD_x
+            x_debut_droite = fin_UHD_x
         else:
             sys.exit("Le ratio n'est pas disponible pour cette résolution.")
 
     # Ligne utile en 1.77 1920x1080
     elif ratio == '1.77':
         if resolution_tmp == '1920x1080':
-            y_debut_haut = 0
-            y_debut_bas = 1079
+            y_debut_haut = debut_HD_y  # Fullframe.
+            y_debut_bas = fin_HD_y  # Fullframe.
 
-            x_debut_gauche = 0
-            x_debut_droite = 1919
-        # Pour l'instant, car UHD :
+            x_debut_gauche = debut_HD_x  # Fullframe.
+            x_debut_droite = fin_HD_x  # Fullframe.
+        elif resolution_tmp == '3840x2160':
+            y_debut_haut = debut_UHD_y  # Fullframe.
+            y_debut_bas = debut_UHD_y  # Fullframe.
+
+            x_debut_gauche = debut_UHD_x  # Fullframe.
+            x_debut_droite = fin_UHD_x  # Fullframe.
         else:
-            y_debut_haut = 0
-            y_debut_bas = 2159
+            sys.exit("Le ratio n'est pas disponible pour cette résolution.")
 
-            x_debut_gauche = 0
-            x_debut_droite = 3839
+    elif ratio == '1.66':
+        if resolution_tmp == '1920x1080':
+            y_debut_haut = debut_HD_y
+            y_debut_bas = fin_HD_y
 
-            # L'UHD a un coefficient x2 :
-            coefficient_resolution = 2
+            x_debut_gauche = 64  # (1920 - (1080 * 1.66)) = 128 / 2 = 64
+            x_debut_droite = 1855  # (1920 - 64) = 1856 - 1
+        elif resolution_tmp == '3840x2160':
+            y_debut_haut = debut_UHD_y
+            y_debut_bas = fin_UHD_y
+
+            x_debut_gauche = 127
+            x_debut_droite = 3712  # (3840 - 127) = 3713 - 1
+        else:
+            sys.exit("Le ratio n'est pas disponible pour cette résolution.")
 
     # Ligne utile en 1.77 1920x1080
     elif ratio == '1.33':
         if resolution_tmp == '1920x1080':
-            y_debut_haut = 0
-            y_debut_bas = 1079
+            y_debut_haut = debut_HD_y
+            y_debut_bas = fin_HD_y
 
-            x_debut_gauche = 240
-            x_debut_droite = 1679
+            x_debut_gauche = 240  # (1920 - (1080 * 1.33333)) = 480 / 2 = 240
+            x_debut_droite = 1679  # (1920 - 240) = 1680 - 1
+        elif resolution_tmp == '3840x2160':
+            y_debut_haut = debut_UHD_y
+            y_debut_bas = fin_UHD_y
+
+            x_debut_gauche = 480
+            x_debut_droite = 3359  # (2160 - 480) = 3360 - 1
         else:
             sys.exit("Le ratio n'est pas disponible pour cette résolution.")
 
@@ -219,8 +277,8 @@ def setRatio(ratio_tmp: str, resolution_tmp) -> None:
         sys.exit('Erreur : Ratio inconnu!!!')
 
 
-def setOption(ligne_utile_sum, ligne_avant_sum, ligne_utile_min, ligne_avant_min, ligne_utile_mean, ligne_avant_mean,
-              ligne_utile_max, ligne_avant_max) -> None:
+def set_option(ligne_utile_sum, ligne_avant_sum, ligne_utile_min, ligne_avant_min, ligne_utile_mean, ligne_avant_mean,
+               ligne_utile_max, ligne_avant_max) -> None:
     """
     Affichage automatisé.
     """
@@ -236,7 +294,7 @@ def setOption(ligne_utile_sum, ligne_avant_sum, ligne_utile_min, ligne_avant_min
         ligne_avant_mean) + ", -" + str(ligne_avant_min) + ", +" + str(ligne_avant_max) + "]): " + str(calcule) + "%"
 
 
-def demiLigne(ligne_utile, ligne_avant) -> bool:
+def demi_ligne(ligne_utile, ligne_avant) -> bool:
     """
     Commun entre les différents défauts.
 
@@ -291,7 +349,7 @@ def demiLigne(ligne_utile, ligne_avant) -> bool:
                 return False
 
 
-def demiLigneHaut(image) -> bool:
+def demi_ligne_haut(image) -> bool:
     """
     Vérifie que la ligne de l'image utile du haut est bien codée (cas 2.39).
 
@@ -300,10 +358,10 @@ def demiLigneHaut(image) -> bool:
     ligne_utile = image[y_debut_haut:(y_debut_haut + 1):1, y_debut_haut:y_debut_bas:1]  # Ligne limite.
     ligne_avant = image[(y_debut_haut + 1):(y_debut_haut + 2):1, y_debut_haut:y_debut_bas:1]
 
-    return demiLigne(ligne_utile, ligne_avant)
+    return demi_ligne(ligne_utile, ligne_avant)
 
 
-def demiLigneBas(image) -> bool:
+def demi_ligne_bas(image) -> bool:
     """
     Vérifie que la ligne de l'image utile du bas est bien codée (cas 2.39).
 
@@ -312,10 +370,10 @@ def demiLigneBas(image) -> bool:
     ligne_utile = image[y_debut_bas:(y_debut_bas + 1):1, y_debut_haut:y_debut_bas:1]  # Ligne limite.
     ligne_avant = image[(y_debut_bas - 1):y_debut_bas:1, y_debut_haut:y_debut_bas:1]
 
-    return demiLigne(ligne_utile, ligne_avant)
+    return demi_ligne(ligne_utile, ligne_avant)
 
 
-def demiLigneGauche(image) -> bool:
+def demi_ligne_gauche(image) -> bool:
     """
     Vérifie que la colonne de gauche de l'image utile est bien codée (cas 2.39).
 
@@ -324,10 +382,10 @@ def demiLigneGauche(image) -> bool:
     ligne_utile = image[y_debut_haut:y_debut_bas:1, x_debut_gauche:(x_debut_gauche + 1):1]  # Ligne limite.
     ligne_avant = image[y_debut_haut:y_debut_bas:1, (x_debut_gauche + 1):(x_debut_gauche + 2):1]
 
-    return demiLigne(ligne_utile, ligne_avant)
+    return demi_ligne(ligne_utile, ligne_avant)
 
 
-def demiLigneDroite(image) -> bool:
+def demi_ligne_droite(image) -> bool:
     """
     Vérifie que la colonne de droite de l'image utile est bien codée (cas 2.39).
 
@@ -336,7 +394,7 @@ def demiLigneDroite(image) -> bool:
     ligne_utile = image[y_debut_haut:y_debut_bas:1, x_debut_droite:(x_debut_droite + 1):1]  # Ligne limite.
     ligne_avant = image[y_debut_haut:y_debut_bas:1, (x_debut_droite - 1):x_debut_droite:1]
 
-    return demiLigne(ligne_utile, ligne_avant)
+    return demi_ligne(ligne_utile, ligne_avant)
 
 
 def close() -> None:
@@ -345,7 +403,7 @@ def close() -> None:
     """
     global i_global, reader
     # On récupère les dernières valeurs de la liste.
-    updateListeProbleme(i_global)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
+    update_liste_probleme(i_global)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
 
     # On clôture tous les flux :
     reader.close()
@@ -357,13 +415,18 @@ i_global = 0
 # == MAIN ==
 # On ne lance le programme que si la licence est OK.
 if fct.licence():
-    cf_ui = cf.ChoixFichierVideo()
-    cf_ui.show()
-    fichier = cf_ui.getFilename()
+    cf = ChoixFichier(ChoixFichier.liste_fichier_video())
+    cf.show()
+    fichier = cf.get_filename()
     print('fichier : ' + str(fichier))
 
     # Image quoi ? RGB/NB??? En fait, cette information est importante...
     reader = imageio.get_reader(fichier, ffmpeg_params=['-an'])
+
+    # Choix du ratio :
+    cr = ChoixRatio()
+    cr.show()
+    ratio = cr.get_ratio()
 
     # Récupère les informations concernant le fichier.
     metadonnees = MetaData(fichier)
@@ -374,13 +437,9 @@ if fct.licence():
 
     framerate = metadonnees.framerate()  # int(24)
 
-    # Choix du ratio :
-    cr.show()
-    ratio = cr.getRatio()
-
     resolution = metadonnees.resolution()  # '3840x2160'
 
-    setRatio(ratio, resolution)
+    set_ratio(ratio, resolution)
 
     duree_to_tc = int(Timecode(framerate, metadonnees.duree_to_tc()).frames - 1)
     duree_image = duree_to_tc  # metadonnees.duree_to_tc()  # 172800
@@ -391,7 +450,7 @@ if fct.licence():
     print("Framerate : " + str(framerate))
 
     # Note: [-1] = dernier element de la liste.
-    rapport.Rapport(fichier.split('/')[-1])
+    rapport = RapportDemiligne(fichier.split('/')[-1])
 
     print('Projet en cours :')
     print(rapport.projet_en_cours())
@@ -403,7 +462,7 @@ if fct.licence():
     starttc_frame = starttc_frame
     endtc_frame = endtc_frame
 
-    rapport.Start(fichier, duree_image, start_tc, framerate, ratio, resolution)
+    rapport.start(duree_image, start_tc, framerate, ratio, resolution)
 
     # Chaque iteration équivaut à une image :
     # On reprend où on s'est arrêté.
@@ -412,27 +471,27 @@ if fct.licence():
         i_global = i
 
         # Met à jour la liste des erreurs (pour avoir un groupe de tc pour une erreur) :
-        updateListeProbleme(i)
+        update_liste_probleme(i)
 
         # Affiche l'avancement tous les 30 secondes :
         if (i % (framerate * 30)) == 0:
             print(str(i) + ' / ' + str(duree_image))
             rapport.savestate(i)
 
-        if not demiLigneHaut(image):
-            addProbleme('Demi ligne <strong>haut</strong>.', str(option_afficher), i)
+        if not demi_ligne_haut(image):
+            add_probleme('Demi ligne <strong>haut</strong>.', str(option_afficher), i)
 
-        if not demiLigneBas(image):
-            addProbleme('Demi ligne <strong>bas</strong>.', str(option_afficher), i)
+        if not demi_ligne_bas(image):
+            add_probleme('Demi ligne <strong>bas</strong>.', str(option_afficher), i)
 
-        if not demiLigneGauche(image):
-            addProbleme('Demi ligne <strong>gauche</strong>.', str(option_afficher), i)
+        if not demi_ligne_gauche(image):
+            add_probleme('Demi ligne <strong>gauche</strong>.', str(option_afficher), i)
 
-        if not demiLigneDroite(image):
-            addProbleme('Demi ligne <strong>droite</strong>.', str(option_afficher), i)
+        if not demi_ligne_droite(image):
+            add_probleme('Demi ligne <strong>droite</strong>.', str(option_afficher), i)
 
     # On récupère les dernières valeurs de la liste.
-    updateListeProbleme(i_global)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
+    update_liste_probleme(i_global)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
 
     # On clôture tous les flux :
     reader.close()

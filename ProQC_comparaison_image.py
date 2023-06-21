@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Main
+"""
+Main.
+"""
 
 # == IMPORTS ==
 import hashlib
@@ -11,14 +13,15 @@ import os
 import xml.etree.ElementTree as xmlparser
 
 import fonctions as fct
+from outils.metadata import MetaData
 import RapportComparaison as rapport
 
-ffmpeg = fct.getFFmpeg()
+ffmpeg = fct.get_ffmpeg()
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
 
-# == Declaration variables: ==
+# == Déclaration variables: ==
 starttc = None
 starttc_frame = 0
 endtc_frame = None
@@ -52,7 +55,7 @@ def updateListeProbleme(num_image: int) -> None:
             # On écrit dans le rapport l'erreur :
 
             # La notion de temps en image.
-            rapport.addDifference(str(int(list_tc_in[i])), str(int(list_tc_out[i])))
+            rapport.add_difference(str(int(list_tc_in[i])), str(int(list_tc_out[i])))
 
             # On supprime de la liste l'erreur :
             list_tc_in = np.delete(list_tc_in, i)
@@ -162,7 +165,7 @@ if fct.licence():
 
     print('Ref : ' + chemin_fichier_ref)
 
-    start_tc = fct.startTimeCodeFile(ffmpeg, chemin_fichier_ref)
+    start_tc = fct.start_timecode_file(ffmpeg, chemin_fichier_ref)
     print('- Start tc: ' + start_tc)
 
     # Construit une DB avec le résultat.
@@ -179,7 +182,11 @@ if fct.licence():
 
     duree_image = int(duree_seconde[0]) * framerate + int((int(duree_seconde[1]) / 100) * framerate)
 
-    rapport.setInformation(duree_image, start_tc, framerate)
+    # Récupère les informations concernant le fichier.
+    metadonnees = MetaData(chemin_fichier_ref)
+    resolution = metadonnees.resolution()  # '3840x2160'
+
+    rapport.set_information(duree_image, start_tc, framerate, resolution)
 
     endtc_frame = duree_image - 1
 
@@ -192,7 +199,7 @@ if fct.licence():
         # Chemin du 2ième fichier
         fichier2 = fichier.find('chemin').text
         print('fichier 2: ' + fichier2)
-        start_tc_f2 = fct.startTimeCodeFile(ffmpeg, fichier2)
+        start_tc_f2 = fct.start_timecode_file(ffmpeg, fichier2)
         print('- Start tc: ' + start_tc_f2)
 
         # Image quoi ? RGB/NB??? En fait, cette information est importante...
@@ -208,7 +215,11 @@ if fct.licence():
         starttc_frame = starttc_frame
         endtc_frame = endtc_frame
 
-        rapport.addFichier(os.path.basename(fichier2), start_tc_f2)
+        duree_seconde = str(reader2.get_meta_data()['duration']).split('.')
+
+        duree_image = int(duree_seconde[0]) * framerate + int((int(duree_seconde[1]) / 100) * framerate)
+
+        rapport.add_fichier(os.path.basename(fichier2), start_tc_f2, duree_image)
 
         # Chaque iteration équivaut à une image :
         for i, image in enumerate(reader, 0):

@@ -1,21 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Main
+"""
+Main.
+"""
 
 # == IMPORTS ==
 import imageio
 import numpy as np
 import os
 
-import ChoixFichierVideo as cf  # Programme qui choisi le fichier à analyser.
-import ChoixRatioListe as cr
-import ChoixTC as ctc  # Programme qui choisi l'intervalle à analyser.
+from ChoixFichier import ChoixFichier  # Programme qui choisi le fichier à analyser.
+from ChoixRatio import ChoixRatio
+from ChoixTC import ChoixTC  # Programme qui choisi l'intervalle à analyser.
 import fonctions as fct
-import Rapport as r
+from Rapport import Rapport
 from outils.metadata import MetaData
 
-ffmpeg = fct.getFFmpeg()
+ffmpeg = fct.get_ffmpeg()
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
@@ -42,11 +44,11 @@ end_y_g = None
 start_x_g = None
 end_x_g = None
 
-# Matrice pour mediaoffline Premiere.
+# Matrice pour media offline Premiere.
 MOLP25 = None
 MOLP100 = None
 
-# Matrice pour mediaoffline Resolve.
+# Matrice pour media offline Resolve.
 MOLR25 = None
 MOLR100 = None
 
@@ -81,13 +83,13 @@ reader_MOLR.close()
 
 
 # == FONCTIONS ==
-def updateListeProbleme(num_image) -> None:
+def update_liste_probleme(num_image) -> None:
     """
     Met à jour la liste des erreurs pour écrire dans le rapport.
 
     :param int num_image: Numéro d'image.
     """
-    global list_tc_in, list_tc_out, list_erreur
+    global list_tc_in, list_tc_out, list_erreur, rapport
 
     # Parcoure la liste des problèmes, si tc out discontinu, alors on écrit dans le rapport.
     for i in range(0, np.size(list_tc_in)):
@@ -95,7 +97,7 @@ def updateListeProbleme(num_image) -> None:
             # On écrit dans le rapport l'erreur :
 
             # La notion de temps en timecode
-            r.addProbleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]), '')
+            rapport.add_probleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]), '')
 
             # On supprime de la liste l'erreur :
             list_tc_in = np.delete(list_tc_in, i)
@@ -105,7 +107,7 @@ def updateListeProbleme(num_image) -> None:
             i -= 1
 
 
-def addProbleme(message: str, num_image: int) -> None:
+def add_probleme(message: str, num_image: int) -> None:
     """
     Quand on doit reporter un problème dans le rapport.
 
@@ -129,7 +131,7 @@ def addProbleme(message: str, num_image: int) -> None:
         list_erreur = np.append(list_erreur, message)
 
 
-def setRatio(ratio_tmp: str) -> None:
+def set_ratio(ratio_tmp: str) -> None:
     """
     On définit le ratio et on prépare les matrices d'analyse de l'image.
 
@@ -180,7 +182,7 @@ def setRatio(ratio_tmp: str) -> None:
     MOLR100 = MOLR[start_y_g:end_y_g:y_g, start_x_g:end_x_g:x_g]
 
 
-def detecteNoir(image) -> bool:
+def detecte_noir(image) -> bool:
     """
     Détecter les noirs.
     methodeAnalyse est la precision avec laquelle il faut vérifier l'image.
@@ -202,7 +204,7 @@ def detecteNoir(image) -> bool:
 # Note : si retourne 'False' c'est que ce n'est pas bon...
 
 
-def compareTab(a, b):
+def compare_tab(a, b):
     """
     Compare deux matrices, renvoi une liste avec des True et des False pour l'égalité de la valeur aux mêmes coordonnées.
 
@@ -212,43 +214,43 @@ def compareTab(a, b):
     return str(a == b)
 
 
-def mediaOffLinePremiere(image) -> bool:
+def media_offline_premiere(image) -> bool:
     """
     Détecter "mediaoffline" Premiere.
 
     :param image:
     """
-    if compareTab(MOLP25, image[start_y_p:end_y_p:y_p, start_x_p:end_x_p:x_p]).count(
+    if compare_tab(MOLP25, image[start_y_p:end_y_p:y_p, start_x_p:end_x_p:x_p]).count(
             'False') < 2:  # Marge d'erreur de 2 sur 25
-        if compareTab(MOLP100, image[start_y_g:end_y_g:y_g, start_x_g:end_x_g:x_g]).count(
+        if compare_tab(MOLP100, image[start_y_g:end_y_g:y_g, start_x_g:end_x_g:x_g]).count(
                 'False') < 10:  # Marge d'erreur de 10 sur 100
             # Egalite des deux matrices + la soustraction des deux doit donner moins de 500 :
-            if compareTab(MOLP, image).count('False') < 150:  # Marge d'erreur de 150 sur 1920*1080
+            if compare_tab(MOLP, image).count('False') < 150:  # Marge d'erreur de 150 sur 1920*1080
                 return False
             else:
                 return True
     return True
 
 
-def mediaOffLineResolve(image) -> bool:
+def media_offline_resolve(image) -> bool:
     """
     Détecter "mediaoffline" Premiere.
 
     :param image:
     """
-    if compareTab(MOLR25, image[start_y_p:end_y_p:y_p, start_x_p:end_x_p:x_p]).count(
+    if compare_tab(MOLR25, image[start_y_p:end_y_p:y_p, start_x_p:end_x_p:x_p]).count(
             'False') < 2:  # Marge d'erreur de 2 sur 25.
-        if compareTab(MOLR100, image[start_y_g:end_y_g:y_g, start_x_g:end_x_g:x_g]).count(
+        if compare_tab(MOLR100, image[start_y_g:end_y_g:y_g, start_x_g:end_x_g:x_g]).count(
                 'False') < 10:  # Marge d'erreur de 10 sur 100.
             # Égalité des deux matrices + la soustraction des deux doit donner moins de 500 :
-            if compareTab(MOLR, image).count('False') < 150:  # Marge d'erreur de 150 sur 1920*1080
+            if compare_tab(MOLR, image).count('False') < 150:  # Marge d'erreur de 150 sur 1920*1080
                 return False
             else:
                 return True
     return True
 
 
-def ligneHautImage(image) -> bool:
+def ligne_haut_image(image) -> bool:
     """
     Détecter quand les blankings ne sont pas justes :
     ratio est le ratio à verifier pour les blankings.
@@ -263,7 +265,7 @@ def ligneHautImage(image) -> bool:
         return True
 
 
-def ligneBasImage(image) -> bool:
+def ligne_bas_image(image) -> bool:
     """
     Vérifie si les blanking du bas sont correctes.
     Prévu pour 2.39.
@@ -277,7 +279,7 @@ def ligneBasImage(image) -> bool:
         return True
 
 
-def colonneGaucheImage(image) -> bool:
+def colonne_gauche_image(image) -> bool:
     """
     Vérifie les blankings gauches.
 
@@ -290,7 +292,7 @@ def colonneGaucheImage(image) -> bool:
         return True
 
 
-def colonneDroiteImage(image) -> bool:
+def colonne_droite_image(image) -> bool:
     """
     Vérifie les blankings droits.
 
@@ -303,7 +305,7 @@ def colonneDroiteImage(image) -> bool:
         return True
 
 
-def blankingHaut(image) -> bool:
+def blanking_haut(image) -> bool:
     """
     Vérifie les blankings hauts.
     Prévu pour 2.39.
@@ -316,7 +318,7 @@ def blankingHaut(image) -> bool:
         return True
 
 
-def blankingBas(image) -> bool:
+def blanking_bas(image) -> bool:
     """
     Vérifie les blanking bas.
     Prévu pour 2.39.
@@ -333,23 +335,24 @@ def close() -> None:
     """
     Clôturer l'analyse d'une video (en clôturant son flux ainsi que celui du rapport).
     """
+    global rapport
     # On récupère les dernières valeurs de la liste.
-    updateListeProbleme(i + 1)
+    update_liste_probleme(i + 1)
 
     # On clôture tous les flux :
     reader.close()
-    r.close()
+    rapport.close()
 
 
 # == MAIN ==
 # On ne lance le programme que si la licence est OK.
 if fct.licence():
     # Note : Normalement décode du Pro Res 422HQ ! :)
-    cf_ui = cf.ChoixFichierVideo()
-    cf_ui.show()
-    fichier = cf_ui.getFilename()
+    cf = ChoixFichier(ChoixFichier.liste_fichier_video())
+    cf.show()
+    fichier = cf.get_filename()
     print('fichier: ' + fichier)
-    print('Start tc: ' + fct.startTimeCodeFile(ffmpeg, fichier))
+    print('Start tc: ' + fct.start_timecode_file(ffmpeg, fichier))
     reader = imageio.get_reader(fichier, ffmpeg_params=['-an'])
 
     # Récupère les informations concernant le fichier.
@@ -357,72 +360,74 @@ if fct.licence():
     framerate = metadonnees.framerate()
 
     # Note: [-1] = dernier element de la liste.
-    r.rapport(fichier.split('/')[-1], True, 'html')
+    rapport = Rapport(fichier.split('/')[-1], True, 'html')
 
+    cr = ChoixRatio()
     cr.show()
-    ratio = cr.getRatio()
+    ratio = cr.get_ratio()
 
     # Choix du ratio :
-    setRatio(ratio)
+    set_ratio(ratio)
     duree = reader.get_length()
     endtc_frame = duree - 1
     print('Ratio: ' + ratio)
 
-    ctc.setTimecodeIn(str(starttc_frame))
-    ctc.setTimecodeOut(str(endtc_frame))
+    ctc = ChoixTC()
+    ctc.set_timecode_in(str(starttc_frame))
+    ctc.set_timecode_out(str(endtc_frame))
 
     # Choix du timecode (debut et fin) à vérifier :
-    ctc.fenetre()
+    ctc.show()
 
-    starttc_frame = ctc.getTimecodeIn()
-    endtc_frame = ctc.getTimecodeOut()
+    starttc_frame = ctc.get_timecode_in()
+    endtc_frame = ctc.get_timecode_out()
 
-    r.setInformations(duree, '00:00:00:00', framerate, ratio)
+    rapport.set_informations(duree, '00:00:00:00', framerate, ratio)
 
     # Choix des vérifications : noirs, drop, mediaoffline...
     # Chaque iteration équivaut à une image :
     for i, image in enumerate(reader, start=0):
 
         # Met à jour la liste des erreurs (pour avoir un group de tc pour une erreur) :
-        updateListeProbleme(i)
+        update_liste_probleme(i)
 
         # Affiche l'avancement tous les 24 images :
         if (i % (framerate * 3)) == 0:
             print(str(i) + ' / ' + str(duree))
 
         # On regarde si l'image est noir :
-        if not detecteNoir(image):
-            addProbleme("L'image est noire", i)
+        if not detecte_noir(image):
+            add_probleme("L'image est noire", i)
         # Si l'image n'est pas noir :
         # MediaOffLine Premiere ?
-        elif not mediaOffLinePremiere(image):
-            addProbleme('Media offline Premiere', i)
+        elif not media_offline_premiere(image):
+            add_probleme('Media offline Premiere', i)
         # Media Offline Resolve?
-        elif not mediaOffLineResolve(image):
-            addProbleme('Media offline Resolve', i)
+        elif not media_offline_resolve(image):
+            add_probleme('Media offline Resolve', i)
         # Drop de Resolve ?
         # elif not DropResolve(image):
         #    Probleme("Drop Resolve", i)
         # Si l'image n'est pas un média offline ou drop sur toute l'image, alors on peut s'intéresser au blanking et/ou lignes utiles de l'image.
         else:
-            if not ligneHautImage(image):
-                addProbleme('Ligne noir en haut de l\'image', i)
+            if not ligne_haut_image(image):
+                add_probleme('Ligne noir en haut de l\'image', i)
 
-            if not ligneBasImage(image):
-                addProbleme('Ligne noire en bas de l\'image', i)
+            if not ligne_bas_image(image):
+                add_probleme('Ligne noire en bas de l\'image', i)
 
-            if not colonneGaucheImage(image):
-                addProbleme('Colonne noire à gauche de l\'image', i)
+            if not colonne_gauche_image(image):
+                add_probleme('Colonne noire à gauche de l\'image', i)
 
-            if not colonneDroiteImage(image):
-                addProbleme('Colonne noire à droite de l\'image', i)
+            if not colonne_droite_image(image):
+                add_probleme('Colonne noire à droite de l\'image', i)
 
             # On ne vérifie les bandes noires que si on n'est pas du 1.77 et que l'image n'est pas noir :
             if ratio != '1.77':
-                if not blankingHaut(image):
-                    addProbleme('Les blankings du haut ne sont pas noirs', i)
-                if not blankingBas(image):
-                    addProbleme('Les blankings du bas ne sont pas noirs', i)
+                if not blanking_haut(image):
+                    add_probleme('Les blankings du haut ne sont pas noirs', i)
+                if not blanking_bas(image):
+                    add_probleme('Les blankings du bas ne sont pas noirs', i)
 
 close()
 

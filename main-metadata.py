@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
+"""
+Main.
+"""
+
 # Test pour récupérer les informations.
 from pymediainfo import MediaInfo
 

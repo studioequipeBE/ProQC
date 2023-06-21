@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Main
+"""
+Main.
+"""
 
 # == IMPORTS ==
 import hashlib
@@ -12,10 +14,8 @@ import xml.etree.ElementTree as xmlparser
 
 import fonctions as fct
 
-
-ffmpeg = fct.getFFmpeg()
+ffmpeg = fct.get_ffmpeg()
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
-
 
 # Liste de fichier à faire une cache.
 liste_fichier = []

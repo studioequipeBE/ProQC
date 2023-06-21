@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Main
+"""
+Main.
+"""
 
 # == IMPORTS ==
 import sqlite3

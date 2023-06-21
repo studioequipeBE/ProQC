@@ -1,21 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Main
+"""
+Main.
+"""
 
 # == IMPORTS ==
 import imageio
 import numpy as np
 import os
 
-import ChoixFichierVideo as cf  # Programme qui choisi le fichier à analyser.
-import ChoixFramerateListe as cfr
-import ChoixRatioListe as cr
+from ChoixFichier import ChoixFichier  # Programme qui choisi le fichier à analyser.
+from ChoixFramerate import ChoixFramerate
+from ChoixRatio import ChoixRatio
 import fonctions as fct
-import Rapport as r
+from Rapport import Rapport
 from outils.metadata import MetaData
 
-ffmpeg = fct.getFFmpeg()
+ffmpeg = fct.get_ffmpeg()
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
 # == VALEURS ==
@@ -311,46 +313,35 @@ def demiLigneDroite(image) -> bool:
     return demiLigne(ligne_utile, ligne_avant)
 
 
-def close() -> None:
-    """
-    Clôturer l'analyse d'une video (en clôturant son flux ainsi que celui du rapport).
-    """
-    global i_global, reader
-    # On récupère les dernières valeurs de la liste.
-    updateListeProbleme(i_global)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
-
-    # On clôture tous les flux :
-    reader.close()
-    r.close()
-
-
 i_global = 0
 
 # == MAIN ==
 # On ne lance le programme que si la licence est OK.
 if fct.licence():
-    cf_ui = cf.ChoixFichierVideo()
-    cf_ui.show()
-    fichier = cf_ui.getFilename()
+    cf = ChoixFichier(ChoixFichier.liste_fichier_video())
+    cf.show()
+    fichier = cf.get_filename()
     print('fichier : ' + str(fichier))
-    start_tc = fct.startTimeCodeFile(ffmpeg, fichier)
+    start_tc = fct.start_timecode_file(ffmpeg, fichier)
     print('Start tc : ' + start_tc)
 
     # Image quoi ? RGB/NB??? En fait, cette information est importante...
     reader = imageio.get_reader(fichier, ffmpeg_params=['-an'])
 
-    framerate = int(cfr.getFramerate())
+    cfr = ChoixFramerate()
+    cfr.show()
+
+    framerate = int(cfr.get_framerate())
 
     print('Framerate : ' + str(framerate))
 
     # Note: [-1] = dernier element de la liste.
-    r.Rapport(fichier.split('/')[-1], 'html')
-
-    r.setRapport('== Debut du rapport ==\n')
+    rapport = Rapport(fichier.split('/')[-1], True)
 
     # Choix du ratio :
+    cr = ChoixRatio()
     cr.show()
-    ratio = cr.getRatio()
+    ratio = cr.get_ratio()
 
     # Récupère les informations concernant le fichier.
     metadonnees = MetaData(fichier)
@@ -365,7 +356,7 @@ if fct.licence():
     starttc_frame = starttc_frame
     endtc_frame = endtc_frame
 
-    r.Start(fichier, duree_image, start_tc, framerate, ratio, resolution)
+    rapport.set_informations(duree_image, start_tc, framerate, ratio, resolution)
 
     # Chaque iteration équivaut à une image :
     for i, image in enumerate(reader, start=0):
@@ -396,6 +387,6 @@ if fct.licence():
 
     # On clôture tous les flux :
     reader.close()
-    r.close()
+    rapport.close()
 
 # == END ==
