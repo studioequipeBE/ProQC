@@ -3,7 +3,6 @@ from pymediainfo import MediaInfo
 
 # Permet de récupérer des informations sur un fichier vidéo.
 class MetaData:
-
     # Nom du fichier qu'on analyse.
     filename = None
 
@@ -20,7 +19,11 @@ class MetaData:
 
         # Timecode en cas de MP4 :
         if extension == 'mp4':
-            return self.media_info.tracks[0].to_data()['tim']
+            try:
+                return self.media_info.tracks[0].to_data()['tim']
+            # Le tim n'existe pas, donc pas de TC disponible.
+            except KeyError:
+                return '00:00:00:00'
 
         # Timecode en cas de WAV :
         if extension == 'wav':
