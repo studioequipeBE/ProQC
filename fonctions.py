@@ -68,7 +68,8 @@ def get_ffmpeg() -> str:
     match platform.system():
         case 'Windows':
             chemin_ffmpeg += 'ffmpeg.exe'
-        case 'macOS':
+        # C'est MacOS :
+        case 'Darwin':
             chemin_ffmpeg += 'ffmpeg'
 
     return chemin_ffmpeg
