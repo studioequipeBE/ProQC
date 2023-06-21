@@ -9,6 +9,9 @@ data.db
 modules/ffmpeg
 modules/ffmpeg.exe
 
+# Ignore les fichiers cache MacOS :
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -39,7 +39,11 @@ class MetaData:
 
     # Retourne la résolution du fichier vidéo au format 'hauteurxlargeur'.
     def resolution(self) -> str:
-        return self.media_info.video_tracks[0].to_data()['sampled_width'] + 'x' + self.media_info.video_tracks[0].to_data()['sampled_height']
+        try:
+            return self.media_info.video_tracks[0].to_data()['sampled_width'] + 'x' + self.media_info.video_tracks[0].to_data()['sampled_height']
+        # Cela peut échouer pour quand c'est du DNx dans du mov.
+        except KeyError:
+            return str(self.media_info.video_tracks[0].to_data()['width']) + 'x' + str(self.media_info.video_tracks[0].to_data()['height'])
 
     # Durée du fichier en timecode SMTP.
     def duree_to_tc(self) -> str:

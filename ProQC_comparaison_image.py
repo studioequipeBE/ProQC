@@ -156,8 +156,7 @@ def identique(image1, image2, methode: int) -> bool:
 # On ne lance le programme que si la licence est OK.
 if fct.licence():
     # TODO : Import XML de comparaison (généré par App Java):
-    desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
-    xml = xmlparser.parse(desktop + os.sep + 'comparaison.xml')
+    xml = xmlparser.parse(fct.get_desktop() + os.sep + 'comparaison.xml')
     options = xml.getroot().find('options')
     fichier_ref = xml.getroot().find('fichier_ref')
     chemin_fichier_ref = fichier_ref.find('chemin').text

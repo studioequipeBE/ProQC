@@ -9,6 +9,7 @@ import os
 import sqlite3
 from timecode import Timecode
 
+import fonctions as fct
 import TimecodeP as tc
 
 
@@ -47,8 +48,7 @@ class RapportComparaison:
         if not os.path.exists(self.chemin_rapport):  # Tu remplaces chemin par le chemin complet.
             os.mkdir(self.chemin_rapport)
 
-        self.con = sqlite3.connect(
-            'C:\\Users\\win10dev\\Desktop\\comparaison_' + fichier_ref + '.db')
+        self.con = sqlite3.connect(fct.get_desktop() + os.sep + 'comparaison_' + fichier_ref + '.db')
         self.cur = self.con.cursor()
 
         # Table contenant les informations sur le fichier.

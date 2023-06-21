@@ -57,6 +57,25 @@ def licence() -> bool:
         return False
 
 
+def get_desktop() -> str:
+    """
+    Retourne le chemin du bureau.
+    """
+    import platform
+    import os
+
+    match platform.system():
+        case 'Windows':
+            desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+        # C'est MacOS :
+        case 'Darwin':
+            desktop = os.path.join(os.path.join(os.environ['HOME']), 'Desktop')
+        case other:
+            desktop = ''
+
+    return desktop
+
+
 def get_ffmpeg() -> str:
     """
     Récupère le chemin de FFmpeg.
