@@ -1,93 +1,86 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-# Fichier : Permet de choisir (graphiquement) le tc de debut et de fin a analyser dans le fichier.
-
-# == IMPORTS ==
 from tkinter import *
 
-tc_in = None
-tc_out = None
 
-entry = None
-entry2 = None
-root = None
-
-
-# == FONCTIONS ==
-def quitter() -> None:
+class ChoixTC:
     """
-    Quand on quitte la fenêtre.
+    Permet de choisir (graphiquement) le tc de debut et de fin à analyser dans le fichier.
     """
-    global root, entry, entry2, tc_in, tc_out
-    tc_in = entry.get()
-    tc_out = entry2.get()
-    root.quit()
-    root.destroy()
 
+    def __init__(self):
+        self.tc_in = None
+        self.tc_out = None
 
-def getTimecodeIn() -> str:
-    """
-    Retourne le timecode in.
+        self.entry = None
+        self.entry2 = None
+        self.root = None
 
-    :return: Timecode in.
-    """
-    return tc_in
+    def __quitter(self) -> None:
+        """
+        Quand on quitte la fenêtre.
+        """
+        self.tc_in = self.entry.get()
+        self.tc_out = self.entry2.get()
+        self.root.quit()
+        self.root.destroy()
 
+    def get_timecode_in(self) -> str:
+        """
+        Retourne le timecode in.
 
-def getTimecodeOut() -> str:
-    """
-    Retourne le timecode out.
+        :return: Timecode in.
+        """
+        return self.tc_in
 
-    :return: Timecode out.
-    """
-    return tc_out
+    def get_timecode_out(self) -> str:
+        """
+        Retourne le timecode out.
 
+        :return: Timecode out.
+        """
+        return self.tc_out
 
-def setTimecodeIn(tc_in_tmp: str) -> None:
-    """
-    Définit le timecode in.
+    def set_timecode_in(self, tc_in: str) -> None:
+        """
+        Définit le timecode in.
 
-    :param str tc_in_tmp:
-    """
-    global tc_in
-    tc_in = tc_in_tmp
+        :param str tc_in:
+        """
+        self.tc_in = tc_in
 
+    def set_timecode_out(self, tc_out: str) -> None:
+        """
+        Définit le timecode out.
 
-def setTimecodeOut(tc_out_tmp: str) -> None:
-    """
-    Définit le timecode out.
+        :param str tc_out:
+        """
+        self.tc_out = tc_out
 
-    :param str tc_out_tmp:
-    """
-    global tc_out
-    tc_out = tc_out_tmp
+    def show(self) -> None:
+        """
+        Affiche la fenêtre.
+        """
+        self.root = Tk()
 
+        l1 = Label(self.root, text='TC IN')
+        l1.pack(side=LEFT)
 
-def fenetre() -> None:
-    """
-    Affiche la fenêtre.
-    """
-    global root, tc_in, tc_out, entry, entry2
-    root = Tk()
+        self.entry = Entry(self.root)
+        self.entry.insert(0, str(self.tc_in))
+        self.entry.pack(side=LEFT)
 
-    l1 = Label(root, text='TC IN')
-    l1.pack(side=LEFT)
+        # Bouton pour choisir le fichier :
+        button = Button(self.root, text='Fini', command=self.__quitter)
+        button.pack(side=RIGHT)
 
-    entry = Entry(root)
-    entry.insert(0, str(tc_in))
-    entry.pack(side=LEFT)
+        self.entry2 = Entry(self.root)
+        self.entry2.insert(0, str(self.tc_out))
+        self.entry2.pack(side=RIGHT)
 
-    # Bouton pour choisir le fichier :
-    button = Button(root, text='Fini', command=quitter)
-    button.pack(side=RIGHT)
+        l1 = Label(self.root, text='TC OUT')
+        l1.pack(side=RIGHT)
 
-    entry2 = Entry(root)
-    entry2.insert(0, str(tc_out))
-    entry2.pack(side=RIGHT)
-
-    l1 = Label(root, text='TC OUT')
-    l1.pack(side=RIGHT)
-
-    # Écouteur sur la fenêtre :
-    root.mainloop()
+        # Écouteur sur la fenêtre :
+        self.root.mainloop()
