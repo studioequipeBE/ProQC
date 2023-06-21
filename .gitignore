@@ -2,6 +2,9 @@
 Rapports/*.html
 Rapports/JSON/*.json
 
+# Ignore la DB qui est générée :
+data.db
+
 # Fichier à télécharger : "ffmpeg" (macOS) et "ffmpeg.exe" pour Windows.
 modules/ffmpeg
 modules/ffmpeg.exe
