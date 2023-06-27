@@ -92,7 +92,7 @@ def pixel_loin(liste_pixel_ajoute: ListePoint, pixel: tuple[int, int, int]) -> b
     if liste_pixel_ajoute.size():
         for pixel_ajoute in liste_pixel_ajoute.get_liste():
             # Si le pixel qui nous intéresse est déjà trop près d'un autre, on le refuse.
-            if abs(pixel_ajoute.x - pixel[0]) < 20 and abs(pixel_ajoute.y - pixel[1]) < 20:
+            if abs(pixel_ajoute.x - pixel[0]) < 30 and abs(pixel_ajoute.y - pixel[1]) < 30:
                 return False
     return True
 
