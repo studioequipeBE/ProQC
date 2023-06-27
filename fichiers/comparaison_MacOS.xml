@@ -1,22 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<comparaison>
-    <options>
-        <!-- Si on doit compenser pour caler les images, unité de mesure : en image. -->
-        <offset_ref>0</offset_ref>
-    </options>
-    <fichier_ref>
-        <chemin>/Volumes/ROZO-DELIVERIES/01_WIP/02_PICTURE/PartieDeCampagne_52x11m_PSB/02_TV_GRADE/01_SERIE/PARTIE_DE_CAMPAGNE/PC_e101/20221125_RUSTINES/PC_e0101_0220_TCIN_00005112_20221125.mov</chemin>
-        <!-- Si on veut utiliser une cache. -->
-        <utiliser_cache>false</utiliser_cache>
-    </fichier_ref>
-    <fichiers>
-        <fichier>
-            <chemin>/Volumes/ROZO-DELIVERIES/01_WIP/02_PICTURE/PartieDeCampagne_52x11m_PSB/02_TV_GRADE/01_SERIE/PARTIE_DE_CAMPAGNE/PC_e101/20221130_RUSTINES/PC_e0101_0220_TCIN_00012005_20221129.mov</chemin>
-            <meme_machine>true</meme_machine>
-            <!-- Si le fichier a été sort depuis la même machine, on peut utiliser la cache. -->
+<comparaisons>
+    <!-- Une comparaison. -->
+    <comparaison>
+        <options>
+            <!-- Si on doit compenser pour caler les images, unité de mesure : en image. -->
+            <offset_ref>0</offset_ref>
+        </options>
+        <fichier_ref>
+            <chemin>/Volumes/ROZO-DELIVERIES/01_WIP/02_PICTURE/PartieDeCampagne_52x11m_PSB/02_TV_GRADE/01_SERIE/PARTIE_DE_CAMPAGNE/PC_e101/20221125_RUSTINES/PC_e0101_0220_TCIN_00005112_20221125.mov</chemin>
+            <!-- Si on veut utiliser une cache. -->
             <utiliser_cache>false</utiliser_cache>
-            <!-- Nombre d'image offset. -->
-            <offset>0</offset>
-        </fichier>
-    </fichiers>
-</comparaison>
+        </fichier_ref>
+        <fichiers>
+            <fichier>
+                <chemin>/Volumes/ROZO-DELIVERIES/01_WIP/02_PICTURE/PartieDeCampagne_52x11m_PSB/02_TV_GRADE/01_SERIE/PARTIE_DE_CAMPAGNE/PC_e101/20221130_RUSTINES/PC_e0101_0220_TCIN_00012005_20221129.mov</chemin>
+                <meme_machine>true</meme_machine>
+                <!-- Si le fichier a été sort depuis la même machine, on peut utiliser la cache. -->
+                <utiliser_cache>false</utiliser_cache>
+                <!-- Nombre d'image offset. -->
+                <offset>0</offset>
+            </fichier>
+        </fichiers>
+    </comparaison>
+    <!-- Une comparaison. -->
+    <comparaison>
+        <options>
+            <!-- Si on doit compenser pour caler les images, unité de mesure : en image. -->
+            <offset_ref>0</offset_ref>
+        </options>
+        <fichier_ref>
+            <chemin>/Volumes/ROZO-DELIVERIES/01_WIP/02_PICTURE/PartieDeCampagne_52x11m_PSB/02_TV_GRADE/01_SERIE/PARTIE_DE_CAMPAGNE/PC_e101/20221125_RUSTINES/PC_e0101_0220_TCIN_00005112_20221125.mov</chemin>
+            <!-- Si on veut utiliser une cache. -->
+            <utiliser_cache>false</utiliser_cache>
+        </fichier_ref>
+        <fichiers>
+            <fichier>
+                <chemin>/Volumes/ROZO-DELIVERIES/01_WIP/02_PICTURE/PartieDeCampagne_52x11m_PSB/02_TV_GRADE/01_SERIE/PARTIE_DE_CAMPAGNE/PC_e101/20221130_RUSTINES/PC_e0101_0220_TCIN_00012005_20221129.mov</chemin>
+                <meme_machine>true</meme_machine>
+                <!-- Si le fichier a été sort depuis la même machine, on peut utiliser la cache. -->
+                <utiliser_cache>false</utiliser_cache>
+                <!-- Nombre d'image offset. -->
+                <offset>0</offset>
+            </fichier>
+        </fichiers>
+    </comparaison>
+</comparaisons>
