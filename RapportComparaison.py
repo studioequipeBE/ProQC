@@ -11,6 +11,8 @@ from timecode import Timecode
 
 import fonctions as fct
 import TimecodeP as tc
+from ListePoint import ListePoint
+from Point import Point
 
 
 class RapportComparaison:
@@ -51,7 +53,7 @@ class RapportComparaison:
         self.con = sqlite3.connect(fct.get_desktop() + os.sep + 'comparaison_' + fichier_ref + '.db')
         self.cur = self.con.cursor()
 
-        # Table contenant les informations sur le fichier.
+        # Table contenant les informations sur le fichier de référence.
         self.cur.execute('''
          CREATE TABLE IF NOT EXISTS fichier_ref
          (
@@ -67,6 +69,7 @@ class RapportComparaison:
          )
          ''')
 
+        # Les fichiers utilisés pour la comparaison.
         self.cur.execute('''
          CREATE TABLE IF NOT EXISTS fichier
          (
@@ -78,6 +81,7 @@ class RapportComparaison:
          )
          ''')
 
+        # Table avec les différences :
         self.cur.execute('''
          CREATE TABLE IF NOT EXISTS difference
          (
@@ -86,9 +90,23 @@ class RapportComparaison:
              id_fichier_compare TEXT NOT NULL,
              tc_in TEXT NULL,
              tc_out TEXT NULL,
+             pourcentage REAL NULL,
+             nombre_canal INTEGER NULL,
              PRIMARY KEY("id" AUTOINCREMENT)
          )
          ''')
+
+        # Pixel à mettre en évidence :
+        self.cur.execute('''
+                 CREATE TABLE IF NOT EXISTS pixel
+                 (
+                     id INTEGER NOT NULL,
+                     id_difference INTEGER NOT NULL,
+                     x INTEGER NOT NULL,
+                     y INTEGER NOT NULL,
+                     PRIMARY KEY("id" AUTOINCREMENT)
+                 )
+                 ''')
 
     def set_information(self, duree: int = 0, timecodestart: str = '00:00:00:00', framerate: int = 24, resolution: str= '1920x1080') -> None:
         """
@@ -129,25 +147,37 @@ class RapportComparaison:
         # Définit le fichier courant qu'on QC.
         self.id_fichier_compare = res.fetchall()[0][0]
 
-    def add_difference(self, tc_in: str, tc_out: str) -> None:
+    def add_difference(self, tc_in: str, tc_out: str, pourcentage: float, pixels: ListePoint) -> None:
         """
         Écrire dans le rapport.
 
         :param str tc_in: Timecode in.
         :param str tc_out: Timecode out.
+        :param float pourcentage: Pourcentage de différence.
+        :param list[int, int] pixels: Liste des pixels de différence.
         """
         self.cur.execute(
-            'INSERT INTO difference(id_fichier_ref, id_fichier_compare, tc_in, tc_out)'
+            'INSERT INTO difference(id_fichier_ref, id_fichier_compare, tc_in, tc_out, pourcentage)'
             'VALUES'
             '(' + str(self.id_fichier_ref) + ', ' + str(self.id_fichier_compare)
-            + ', "' + tc_in + '", "' + tc_out + '")')
+            + ', "' + tc_in + '", "' + tc_out + '", ' + format(pourcentage, '.6f') + ')')
         self.con.commit()
+
+        print('pixels :')
+        print(pixels)
+        if pixels.size() > 0:
+            for pixel in pixels.get_liste():
+                self.cur.execute(
+                    'INSERT INTO pixel(id_difference, x, y)'
+                    'VALUES'
+                    '(' + str(self.cur.lastrowid) + ', ' + str(pixel.x) + ', ' + str(pixel.y) + ')')
 
     def close(self) -> None:
         """
         Clôture les flux sur la base de données.
         """
         # On indique que le fichier a fini d'être analysé.
+        print('Fin analyse : ' + str(datetime.datetime.now()))
         self.cur.execute('UPDATE fichier_ref SET fin_analyse = "' + str(datetime.datetime.now()) + '"')
 
         # Récupère les informations de l'image ref
@@ -192,7 +222,7 @@ class RapportComparaison:
 
         start_frame = Timecode(framerate, info[1]).frames - 1
 
-        for row in self.cur.execute('SELECT tc_in, tc_out FROM difference ORDER BY tc_in, tc_out ASC'):
+        for row in self.cur.execute('SELECT tc_in, tc_out, pourcentage, nombre_canal, id FROM difference ORDER BY tc_in, tc_out ASC'):
             print(row)
             if i != 0:
                 json.write(',\n')
@@ -200,6 +230,26 @@ class RapportComparaison:
             json.write('\t\t{\n')
             json.write('\t\t\t"tc_in" : "' + tc.frames_to_timecode(int(row[0]) + start_frame, framerate) + '",\n')
             json.write('\t\t\t"tc_out" : "' + tc.frames_to_timecode(int(row[1]) + start_frame, framerate) + '",\n')
+            json.write('\t\t\t"pourcentage" : ' + format(row[2], '.6f') + ',\n')
+            json.write('\t\t\t"nombre_canal" : ' + format(row[3] if (row[3] is not None) else 0, '.6f') + ',\n')
+
+            json.write('\t\t\t"pixels" : [\n')
+
+            # On va rechercher tous les pixels intéressants à mettre en évidence :
+            j = 0
+            for pixel in self.cur.execute('SELECT x, y FROM pixel WHERE id_difference = ' + str(row[4])):
+                if j != 0:
+                    json.write(',\n')
+
+                json.write('\t\t\t\t{\n')
+                json.write('\t\t\t\t\t"x" : ' + pixel[0] + ',\n')
+                json.write('\t\t\t\t\t"y" : ' + pixel[1] + ',\n')
+                json.write('\t\t\t\t}')
+
+            json.write('\n')
+
+            json.write('\t\t\t],\n')
+
             json.write('\t\t\t"remarque" : "Différence."\n')
             json.write('\t\t}')
             i += 1
