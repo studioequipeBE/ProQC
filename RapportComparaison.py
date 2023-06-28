@@ -53,60 +53,62 @@ class RapportComparaison:
         self.con = sqlite3.connect(fct.get_desktop() + os.sep + 'comparaison_' + fichier_ref + '.db')
         self.cur = self.con.cursor()
 
-        # Table contenant les informations sur le fichier de référence.
-        self.cur.execute('''
-         CREATE TABLE IF NOT EXISTS fichier_ref
-         (
-             id INTEGER NOT NULL,
-             nom TEXT NOT NULL UNIQUE,
-             duree_image INTEGER NOT NULL,
-             start_timecode TEXT NOT NULL,
-             framerate TEXT NOT NULL,
-             resolution TEXT NOT NULL,
-             debut_analyse TEXT NOT NULL,
-             fin_analyse TEXT,
-             PRIMARY KEY("id" AUTOINCREMENT)
-         )
-         ''')
+        # Si c'est un nouveau rapport, on créé les tables.
+        if nouveau_rapport:
+            # Table contenant les informations sur le fichier de référence.
+            self.cur.execute('''
+             CREATE TABLE IF NOT EXISTS fichier_ref
+             (
+                 id INTEGER NOT NULL,
+                 nom TEXT NOT NULL UNIQUE,
+                 duree_image INTEGER NOT NULL,
+                 start_timecode TEXT NOT NULL,
+                 framerate TEXT NOT NULL,
+                 resolution TEXT NOT NULL,
+                 debut_analyse TEXT NOT NULL,
+                 fin_analyse TEXT,
+                 PRIMARY KEY("id" AUTOINCREMENT)
+             )
+             ''')
 
-        # Les fichiers utilisés pour la comparaison.
-        self.cur.execute('''
-         CREATE TABLE IF NOT EXISTS fichier
-         (
-             id INTEGER NOT NULL,
-             nom TEXT NOT NULL UNIQUE,
-             start_timecode TEXT NOT NULL,
-             duree_image TEXT NOT NULL,
-             PRIMARY KEY("id" AUTOINCREMENT)
-         )
-         ''')
+            # Les fichiers utilisés pour la comparaison.
+            self.cur.execute('''
+            CREATE TABLE IF NOT EXISTS fichier
+            (
+                id INTEGER NOT NULL,
+                nom TEXT NOT NULL UNIQUE,
+                start_timecode TEXT NOT NULL,
+                duree_image TEXT NOT NULL,
+                PRIMARY KEY("id" AUTOINCREMENT)
+            )
+            ''')
 
-        # Table avec les différences :
-        self.cur.execute('''
-         CREATE TABLE IF NOT EXISTS difference
-         (
-             id INTEGER NOT NULL,
-             id_fichier_ref TEXT NOT NULL,
-             id_fichier_compare TEXT NOT NULL,
-             tc_in TEXT NULL,
-             tc_out TEXT NULL,
-             pourcentage REAL NULL,
-             nombre_canal INTEGER NULL,
-             PRIMARY KEY("id" AUTOINCREMENT)
-         )
-         ''')
+            # Table avec les différences :
+            self.cur.execute('''
+            CREATE TABLE IF NOT EXISTS difference
+            (
+                id INTEGER NOT NULL,
+                id_fichier_ref TEXT NOT NULL,
+                id_fichier_compare TEXT NOT NULL,
+                tc_in INTEGER NULL,
+                tc_out INTEGER NULL,
+                pourcentage REAL NULL,
+                nombre_canal INTEGER NULL,
+                PRIMARY KEY("id" AUTOINCREMENT)
+            )
+            ''')
 
-        # Pixel à mettre en évidence :
-        self.cur.execute('''
-                 CREATE TABLE IF NOT EXISTS pixel
-                 (
-                     id INTEGER NOT NULL,
-                     id_difference INTEGER NOT NULL,
-                     x INTEGER NOT NULL,
-                     y INTEGER NOT NULL,
-                     PRIMARY KEY("id" AUTOINCREMENT)
-                 )
-                 ''')
+            # Pixel à mettre en évidence :
+            self.cur.execute('''
+            CREATE TABLE IF NOT EXISTS pixel
+            (
+                id INTEGER NOT NULL,
+                id_difference INTEGER NOT NULL,
+                x INTEGER NOT NULL,
+                y INTEGER NOT NULL,
+                PRIMARY KEY("id" AUTOINCREMENT)
+            )
+            ''')
 
     def set_information(self, duree: int = 0, timecodestart: str = '00:00:00:00', framerate: int = 24, resolution: str= '1920x1080') -> None:
         """
@@ -147,7 +149,7 @@ class RapportComparaison:
         # Définit le fichier courant qu'on QC.
         self.id_fichier_compare = res.fetchall()[0][0]
 
-    def add_difference(self, tc_in: str, tc_out: str, pourcentage: float, pixels: ListePoint) -> None:
+    def add_difference(self, tc_in: str, tc_out: str, pourcentage: float, nombre_canal: int, pixels: ListePoint) -> None:
         """
         Écrire dans le rapport.
 
@@ -157,20 +159,21 @@ class RapportComparaison:
         :param list[int, int] pixels: Liste des pixels de différence.
         """
         self.cur.execute(
-            'INSERT INTO difference(id_fichier_ref, id_fichier_compare, tc_in, tc_out, pourcentage)'
+            'INSERT INTO difference(id_fichier_ref, id_fichier_compare, tc_in, tc_out, pourcentage, nombre_canal)'
             'VALUES'
             '(' + str(self.id_fichier_ref) + ', ' + str(self.id_fichier_compare)
-            + ', "' + tc_in + '", "' + tc_out + '", ' + format(pourcentage, '.6f') + ')')
-        self.con.commit()
+            + ', "' + tc_in + '", "' + tc_out + '", ' + format(pourcentage, '.6f') + ', ' + str(nombre_canal) + ')'
+        )
 
-        print('pixels :')
-        print(pixels)
+        id_diff = str(self.cur.lastrowid)
+
         if pixels.size() > 0:
             for pixel in pixels.get_liste():
                 self.cur.execute(
                     'INSERT INTO pixel(id_difference, x, y)'
                     'VALUES'
-                    '(' + str(self.cur.lastrowid) + ', ' + str(pixel.x) + ', ' + str(pixel.y) + ')')
+                    '(' + id_diff + ', ' + str(pixel.x) + ', ' + str(pixel.y) + ')')
+        self.con.commit()
 
     def close(self) -> None:
         """
@@ -179,6 +182,7 @@ class RapportComparaison:
         # On indique que le fichier a fini d'être analysé.
         print('Fin analyse : ' + str(datetime.datetime.now()))
         self.cur.execute('UPDATE fichier_ref SET fin_analyse = "' + str(datetime.datetime.now()) + '"')
+        self.con.commit()
 
         # Récupère les informations de l'image ref
         self.cur.execute('SELECT nom, start_timecode, duree_image, resolution, framerate FROM fichier_ref')
@@ -201,7 +205,8 @@ class RapportComparaison:
 
         i = 0
 
-        for row in self.cur.execute('SELECT nom, start_timecode, duree_image FROM fichier ORDER BY start_timecode ASC'):
+        self.cur.execute('SELECT nom, start_timecode, duree_image FROM fichier ORDER BY start_timecode ASC')
+        for row in self.cur.fetchall():
             print(row)
             if i != 0:
                 json.write(',\n')
@@ -222,7 +227,8 @@ class RapportComparaison:
 
         start_frame = Timecode(framerate, info[1]).frames - 1
 
-        for row in self.cur.execute('SELECT tc_in, tc_out, pourcentage, nombre_canal, id FROM difference ORDER BY tc_in, tc_out ASC'):
+        self.cur.execute('SELECT tc_in, tc_out, pourcentage, nombre_canal, id FROM difference ORDER BY tc_in, tc_out ASC')
+        for row in self.cur.fetchall():
             print(row)
             if i != 0:
                 json.write(',\n')
@@ -231,20 +237,23 @@ class RapportComparaison:
             json.write('\t\t\t"tc_in" : "' + tc.frames_to_timecode(int(row[0]) + start_frame, framerate) + '",\n')
             json.write('\t\t\t"tc_out" : "' + tc.frames_to_timecode(int(row[1]) + start_frame, framerate) + '",\n')
             json.write('\t\t\t"pourcentage" : ' + format(row[2], '.6f') + ',\n')
-            json.write('\t\t\t"nombre_canal" : ' + format(row[3] if (row[3] is not None) else 0, '.6f') + ',\n')
+            json.write('\t\t\t"nombre_canal" : ' + str(row[3] if row[3] is not None else 0) + ',\n')
 
             json.write('\t\t\t"pixels" : [\n')
 
             # On va rechercher tous les pixels intéressants à mettre en évidence :
             j = 0
-            for pixel in self.cur.execute('SELECT x, y FROM pixel WHERE id_difference = ' + str(row[4])):
+            self.cur.execute('SELECT x, y FROM pixel WHERE id_difference = ' + str(row[4]))
+            for pixel in self.cur.fetchall():
                 if j != 0:
                     json.write(',\n')
 
                 json.write('\t\t\t\t{\n')
-                json.write('\t\t\t\t\t"x" : ' + pixel[0] + ',\n')
-                json.write('\t\t\t\t\t"y" : ' + pixel[1] + ',\n')
+                json.write('\t\t\t\t\t"x" : ' + str(pixel[0]) + ',\n')
+                json.write('\t\t\t\t\t"y" : ' + str(pixel[1]) + '\n')
                 json.write('\t\t\t\t}')
+
+                j += 1
 
             json.write('\n')
 

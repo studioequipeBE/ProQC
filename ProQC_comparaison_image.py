@@ -40,7 +40,7 @@ def update_liste_probleme(num_image: int) -> None:
             # On écrit dans le rapport l'erreur :
 
             # La notion de temps en image.
-            rapport.add_difference(str(int(list_tc_in[i])), str(int(list_tc_out[i])), liste_pourcentage[i], liste_pixel[i])
+            rapport.add_difference(str(int(list_tc_in[i])), str(int(list_tc_out[i])), liste_pourcentage[i], liste_nombre_canal[i], liste_pixel[i])
 
             # On supprime de la liste l'erreur :
             list_tc_in = np.delete(list_tc_in, i)
@@ -92,7 +92,7 @@ def pixel_loin(liste_pixel_ajoute: ListePoint, pixel: tuple[int, int, int]) -> b
     if liste_pixel_ajoute.size():
         for pixel_ajoute in liste_pixel_ajoute.get_liste():
             # Si le pixel qui nous intéresse est déjà trop près d'un autre, on le refuse.
-            if abs(pixel_ajoute.x - pixel[0]) < 30 and abs(pixel_ajoute.y - pixel[1]) < 30:
+            if abs(pixel_ajoute.x - pixel[1]) < 36 and abs(pixel_ajoute.y - pixel[0]) < 36:
                 return False
     return True
 
@@ -149,15 +149,15 @@ def identique(image1, image2, methode: int) -> tuple[bool, float, ListePoint, in
             if pourcentage < 2:
                 liste_pixel_image = ListePoint()
 
-                for delta in reversed(range(1, max)):
+                for delta in range(max, 0, -1):
+                    # La liste est en (y, x, numero_canal)
                     liste_pixel_delta = np.transpose((diff == delta).nonzero())
                     for pixel in liste_pixel_delta:
                         # On ajoute jusqu'à 10 pixels max.
                         if liste_pixel_image.size() < 10:
                             # Les pixels en plus doivent être loin :
                             if pixel_loin(liste_pixel_image, pixel):
-                                print('pixel add : ' + str(pixel[0]) + ', ' + str(pixel[1]))
-                                liste_pixel_image.add_point(Point(pixel[0], pixel[1]))
+                                liste_pixel_image.add_point(Point(pixel[1], pixel[0]))
                         else:
                             break
 
