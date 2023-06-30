@@ -8,4 +8,5 @@ pip==23.1.2
 Pmw~=2.1.1
 pymediainfo==6.0.1
 setuptools==67.8.0
+soundfile==0.12.1 # Pour lire les audios.
 timecode==1.3.1
