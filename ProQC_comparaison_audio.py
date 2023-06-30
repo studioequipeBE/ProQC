@@ -99,9 +99,9 @@ def add_probleme(message: str, option: str, num_image: int) -> None:
 # On ne lance le programme que si la licence est OK.
 if fct.licence():
     # Fichier 1:
-    cf = ChoixFichier(ChoixFichier.liste_fichier_audio())
-    cf.show()
-    fichier = cf.get_filename()
+    # cf = ChoixFichier(ChoixFichier.liste_fichier_audio())
+    # cf.show()
+    fichier = 'C:/Users/win10dev/Desktop/braqueurs_s01_e101_v03_PM_Nearfield_2ch_48k_24b_24.L.wav'  # cf.get_filename()
     print('fichier 1: ' + str(fichier))
     start_tc = fct.start_timecode_file(ffmpeg, fichier)
     print('- Start tc: ' + start_tc)
@@ -109,27 +109,63 @@ if fct.licence():
     duree = 100
 
     # Note: [-1] = dernier element de la liste.
-    rapport = Rapport(fichier.split('/')[-1], True, 'html')
+    rapport = Rapport(fichier.split('/')[-1], True)
 
-    cfr = ChoixFramerate()
-    cfr.show()
+    # cfr = ChoixFramerate()
+    # cfr.show()
 
-    framerate = int(cfr.get_framerate())
+    framerate = 25  # int(cfr.get_framerate())
 
     print('- Framerate: ' + str(framerate))
 
-    rapport.set_informations(duree, start_tc, framerate)
+    rapport.set_informations(duree, start_tc, framerate, '', '')
 
     # Fichier 2:
-    cf = ChoixFichier(ChoixFichier.liste_fichier_audio())
-    cf.show()
-    fichier2 = cf.get_filename()
+    # cf = ChoixFichier(ChoixFichier.liste_fichier_audio())
+    # cf.show()
+    fichier2 = 'C:/Users/win10dev/Desktop/braqueurs_s01_e101_v04_PM_Nearfield_2ch_48k_24b_24.L.wav'  # cf.get_filename()
     print('fichier 2: ' + str(fichier2))
     print('- Start tc: ' + str(fct.start_timecode_file(ffmpeg, fichier2)))
 
     # Cloture l'analyse d'une video (en clôturant son flux ainsi que celui du rapport).
     # On récupère les dernières valeurs de la liste.
     update_liste_probleme(duree)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
+
+    import soundfile as sf
+
+    a = '0'
+
+    signal, samplerate = sf.read(fichier)
+    signal2, samplerate2 = sf.read(fichier2)
+
+    print('- Signal: ' + str(signal))
+    print('- size: ' + str(signal.size))
+    print('- Samplerate: ' + str(samplerate))
+    print(' Duree : ' + str(signal.size/samplerate))
+
+    print('- Signal2: ' + str(signal2))
+    print('- size2: ' + str(signal2.size))
+    print('- Samplerate2: ' + str(samplerate2))
+
+    if signal2.size > signal.size:
+        print('OUI : ' + str(signal2.size - signal.size))
+        signal = np.append(signal, np.zeros(signal2.size - signal.size))
+    elif signal2.size < signal.size:
+        print('OUI : ' + str(signal.size - signal2.size))
+        signal2 = np.append(signal2, np.zeros(signal.size - signal2.size))
+
+    print('- size: ' + str(signal.size))
+    print('- size2: ' + str(signal2.size))
+    signal3 = signal - signal2
+    print('- signal3: ' + str(signal3))
+
+    difference = np.count_nonzero(signal3 != 0)
+    liste_diff = np.transpose((signal3 != 0).nonzero())
+
+    liste_diff = liste_diff/samplerate
+
+    print('- difference: ' + str(difference))
+    print('- liste_diff: ' + str(liste_diff))
 
     # On clôture tous les flux.
     rapport.close()
