@@ -123,7 +123,7 @@ class Rapport:
         :param str option: Les options.
         """
 
-        if type == 'html':
+        if self.type == 'html':
             self.numero += 1
             self.file_.write("<tr><td class= \"bord\">" + str(self.numero) + "</td><td class= \"bord\">" +
                              tc.frames_to_timecode(int(tc_in) + self.tc_debut,
@@ -146,7 +146,7 @@ class Rapport:
         """
         Clôture le flux du fichier de rapport.
         """
-        if type == 'html':
+        if self.type == 'html':
             self.file_.write("</table>\n</body>\n</html>")
             self.file_.close()
         else:
