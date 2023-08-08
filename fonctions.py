@@ -9,14 +9,14 @@ def tc_actuel(num_image: int, starttc: str, framerate: int = 24) -> str:
     import timecode as Timecode
     import TimecodeP as tc
 
-    tc1 = Timecode(framerate, starttc)
+    tc1 = Timecode.Timecode(framerate, starttc)
     if num_image > 0:
         # Comme le résultat est toujours une image en trop, j'enlève ce qu'il faut : :)
-        tc2 = Timecode(framerate, tc.frames_to_timecode((num_image - 1), framerate))
+        tc2 = Timecode.Timecode(framerate, tc.frames_to_timecode((num_image - 1), framerate))
         tc3 = tc1 + tc2
-        return tc3
+        return str(tc3)
     else:
-        return tc1
+        return str(tc1)
 
 
 def start_timecode_file(ffmpeg: str, fichier: str) -> str:
@@ -40,6 +40,33 @@ def start_timecode_file(ffmpeg: str, fichier: str) -> str:
     for i in range(18, 29):
         tc += infos[index + i]
     return tc
+
+
+def start_sample_rate_file(ffmpeg: str, fichier: str) -> int:
+    """
+    Timecode du fichier analyse.
+
+    :param str ffmpeg: Où se trouve FFMPEG !
+    :param str fichier: Le fichier.
+    """
+    import subprocess as sp
+
+    command = [ffmpeg, '-i', fichier]
+    pipe = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
+    pipe.stdout.readline()
+    pipe.terminate()
+    infos = str(pipe.stderr.read())
+    tc = ''
+
+    # index = infos.find('timecode')
+    time_ref = infos.find('time_reference') + 18
+
+    i2 = 0
+    while infos[time_ref + i2] != '\\':
+        # print(infos[time_ref + i2])
+        tc += infos[time_ref + i2]
+        i2 += 1
+    return int(tc)
 
 
 def licence() -> bool:

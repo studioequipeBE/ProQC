@@ -57,7 +57,8 @@ def update_liste_probleme(num_image: int) -> None:
             num_erreur = num_erreur + 1
             print(str(num_erreur) + ' / ' + str(list_tc_in[i]) + ' : update liste, on ajoute une erreur !')
             # On écrit dans le rapport l'erreur :
-            rapport.add_probleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]), str(liste_option[i]))
+            rapport.add_probleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]),
+                                 str(liste_option[i]))
 
             # On supprime de la liste l'erreur :
             list_tc_in = np.delete(list_tc_in, i)
@@ -102,9 +103,9 @@ if fct.licence():
     # cf = ChoixFichier(ChoixFichier.liste_fichier_audio())
     # cf.show()
     fichier = 'C:/Users/win10dev/Desktop/braqueurs_s01_e101_v03_PM_Nearfield_2ch_48k_24b_24.L.wav'  # cf.get_filename()
-    print('fichier 1: ' + str(fichier))
-    start_tc = fct.start_timecode_file(ffmpeg, fichier)
-    print('- Start tc: ' + start_tc)
+    print('Fichier 1: ' + str(fichier))
+    start_tc = fct.start_sample_rate_file(ffmpeg, fichier)
+    print('- Start tc: ' + str(start_tc))
 
     duree = 100
 
@@ -114,7 +115,7 @@ if fct.licence():
     # cfr = ChoixFramerate()
     # cfr.show()
 
-    framerate = 25  # int(cfr.get_framerate())
+    framerate = 24  # int(cfr.get_framerate())
 
     print('- Framerate: ' + str(framerate))
 
@@ -124,8 +125,8 @@ if fct.licence():
     # cf = ChoixFichier(ChoixFichier.liste_fichier_audio())
     # cf.show()
     fichier2 = 'C:/Users/win10dev/Desktop/braqueurs_s01_e101_v04_PM_Nearfield_2ch_48k_24b_24.L.wav'  # cf.get_filename()
-    print('fichier 2: ' + str(fichier2))
-    print('- Start tc: ' + str(fct.start_timecode_file(ffmpeg, fichier2)))
+    print('Fichier 2: ' + str(fichier2))
+    print('- Start tc: ' + str(fct.start_sample_rate_file(ffmpeg, fichier2)))
 
     # Cloture l'analyse d'une video (en clôturant son flux ainsi que celui du rapport).
     # On récupère les dernières valeurs de la liste.
@@ -141,7 +142,7 @@ if fct.licence():
     print('- Signal: ' + str(signal))
     print('- size: ' + str(signal.size))
     print('- Samplerate: ' + str(samplerate))
-    print(' Duree : ' + str(signal.size/samplerate))
+    print('- Duree : ' + str(signal.size / samplerate))
 
     print('- Signal2: ' + str(signal2))
     print('- size2: ' + str(signal2.size))
@@ -162,10 +163,24 @@ if fct.licence():
     difference = np.count_nonzero(signal3 != 0)
     liste_diff = np.transpose((signal3 != 0).nonzero())
 
-    liste_diff = liste_diff/samplerate
+    liste_diff = liste_diff + start_tc
+    liste_diff = liste_diff // (samplerate/framerate)
 
     print('- difference: ' + str(difference))
     print('- liste_diff: ' + str(liste_diff))
+
+    f = open('C:/Users/win10dev/Desktop/rapport.txt', 'w+')
+
+    last_tc = ''
+
+    tc_courant = ''
+
+    for i in range(0, len(liste_diff)):
+        tc_courant = fct.tc_actuel(liste_diff[i][0], '00:00:00:00', framerate)
+        if tc_courant != last_tc:
+            f.write(tc_courant + '\n')
+            last_tc = tc_courant
+    f.close()
 
     # On clôture tous les flux.
     rapport.close()
