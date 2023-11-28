@@ -13,7 +13,7 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 
-def frames_to_timecode(total_frames: int, frame_rate: int = 24, drop: bool = False) -> str:
+def frames_to_timecode(total_frames: int, frame_rate: float = 24, drop: bool = False) -> str:
     """
     Method that converts frames to SMPTE timecode.
     

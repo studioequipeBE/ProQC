@@ -54,7 +54,7 @@ class Rapport:
             if nouveau_rapport:
                 self.id_rapport = bdd.addRapport(fichier)
 
-    def set_informations(self, duree: int, timecodestart: str = '00:00:00:00', framerate: int = 24,
+    def set_informations(self, duree: int, timecodestart: str = '00:00:00:00', framerate: float = 24,
                          resolution: str = '1920x1080', ratio: str = None) -> None:
         """
         Quand on commence le rapport.

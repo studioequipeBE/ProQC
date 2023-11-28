@@ -1,4 +1,4 @@
-def tc_actuel(num_image: int, starttc: str, framerate: int = 24) -> str:
+def tc_actuel(num_image: int, starttc: str, framerate: float = 24) -> str:
     """
     Donne le TC actuel à l'aide d'un nombre d'images et sur base d'un tc de départ.
 

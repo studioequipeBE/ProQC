@@ -17,92 +17,17 @@ from Rapport import Rapport
 ffmpeg = fct.get_ffmpeg()
 os.environ['IMAGEIO_FFMPEG_EXE'] = ffmpeg
 
-# == VALEURS ==
-
 # == Declaration variables: ==
-starttc = None
-starttc_frame = 0
-endtc_frame = None
-
-# Définit à quelle ligne commence l'image utile (en fonction de son ratio).
-y_debut_haut = None  # 1ère ligne utile vers le haut.
-y_debut_bas = None  # 1ère ligne utile vers le bas.
-
 framerate = None
-
-option_afficher = ''  # Valeur des paramètres.
-
-# Liste des erreurs : tc in | tc out | erreur | option
-list_tc_in = np.array([])
-list_tc_out = np.array([])
-list_erreur = np.array([])
-liste_option = np.array([])
-
-# Numéro d'erreur
-num_erreur = 0
-
-
-# == FONCTIONS ==
-def update_liste_probleme(num_image: int) -> None:
-    """
-    Met à jour la liste des erreurs pour écrire dans le rapport.
-
-    :param int num_image: Numéro d'image.
-    """
-    global list_tc_in, list_tc_out, list_erreur, liste_option, num_erreur, rapport
-
-    # Parcoure la liste des problèmes, si tc out discontinu, alors on écrit dans le rapport.
-    for i in range(0, np.size(list_tc_in)):
-        if i < np.size(list_tc_in) and list_tc_out[i] != (num_image - 1):
-            num_erreur = num_erreur + 1
-            print(str(num_erreur) + ' / ' + str(list_tc_in[i]) + ' : update liste, on ajoute une erreur !')
-            # On écrit dans le rapport l'erreur :
-            rapport.add_probleme(str(int(list_tc_in[i])), str(int(list_tc_out[i])), str(list_erreur[i]),
-                                 str(liste_option[i]))
-
-            # On supprime de la liste l'erreur :
-            list_tc_in = np.delete(list_tc_in, i)
-            list_tc_out = np.delete(list_tc_out, i)
-            list_erreur = np.delete(list_erreur, i)
-            liste_option = np.delete(liste_option, i)
-            # On doit stagner dans les listes si on supprime un élément.
-            i -= 1
-
-
-def add_probleme(message: str, option: str, num_image: int) -> None:
-    """
-    Quand on doit reporter un problème dans le rapport.
-    :param str message: Le message.
-    :param str option:
-    :param int num_image: Numéro d'image.
-    """
-    global list_tc_in, list_tc_out, list_erreur, liste_option
-
-    # Si c'est une nouvelle erreur :
-    new = True
-
-    # Si l'erreur est dans la liste :
-    for i in range(0, np.size(list_tc_in, 0)):
-        if list_erreur[i] == message:
-            list_tc_out[i] = num_image  # Met à jour le tc out
-            new = False
-
-    # Sinon, on ajoute le problème à la liste :
-    if new:
-        # Quand on ajoute, on spécifie le tableau à qui on ajoute une valeur.
-        list_tc_in = np.append(list_tc_in, num_image)
-        list_tc_out = np.append(list_tc_out, num_image)
-        liste_option = np.append(liste_option, option)
-        list_erreur = np.append(list_erreur, message)
 
 
 # == MAIN ==
 # On ne lance le programme que si la licence est OK.
 if fct.licence():
     # Fichier 1:
-    # cf = ChoixFichier(ChoixFichier.liste_fichier_audio())
-    # cf.show()
-    fichier = 'C:/Users/win10dev/Desktop/braqueurs_s01_e101_v03_PM_Nearfield_2ch_48k_24b_24.L.wav'  # cf.get_filename()
+    cf = ChoixFichier(ChoixFichier.liste_fichier_audio())
+    cf.show()
+    fichier = cf.get_filename()  # 'C:/Users/win10dev/Desktop/braqueurs_s01_e101_v03_PM_Nearfield_2ch_48k_24b_24.L.wav'
     print('Fichier 1: ' + str(fichier))
     start_tc = fct.start_sample_rate_file(ffmpeg, fichier)
     print('- Start tc: ' + str(start_tc))
@@ -112,77 +37,285 @@ if fct.licence():
     # Note: [-1] = dernier element de la liste.
     rapport = Rapport(fichier.split('/')[-1], True)
 
-    # cfr = ChoixFramerate()
-    # cfr.show()
+    cfr = ChoixFramerate()
+    cfr.show()
 
-    framerate = 24  # int(cfr.get_framerate())
+    framerate = float(cfr.get_framerate())  # 23.976
 
     print('- Framerate: ' + str(framerate))
 
-    rapport.set_informations(duree, start_tc, framerate, '', '')
+    rapport.set_informations(duree, str(start_tc), framerate, '', '')
 
     # Fichier 2:
-    # cf = ChoixFichier(ChoixFichier.liste_fichier_audio())
-    # cf.show()
-    fichier2 = 'C:/Users/win10dev/Desktop/braqueurs_s01_e101_v04_PM_Nearfield_2ch_48k_24b_24.L.wav'  # cf.get_filename()
+    cf = ChoixFichier(ChoixFichier.liste_fichier_audio())
+    cf.show()
+    fichier2 = cf.get_filename()  # 'C:/Users/win10dev/Desktop/braqueurs_s01_e101_v04_PM_Nearfield_2ch_48k_24b_24.L.wav'
     print('Fichier 2: ' + str(fichier2))
     print('- Start tc: ' + str(fct.start_sample_rate_file(ffmpeg, fichier2)))
 
-    # Cloture l'analyse d'une video (en clôturant son flux ainsi que celui du rapport).
-    # On récupère les dernières valeurs de la liste.
-    update_liste_probleme(duree)  # De prime à bord, il ne faut pas incrémenter la valeur, elle l'est déjà.
-
     import soundfile as sf
 
-    a = '0'
+    signal, samplerate = sf.read(fichier, dtype='int32')
 
-    signal, samplerate = sf.read(fichier)
-    signal2, samplerate2 = sf.read(fichier2)
+    signal2, samplerate2 = sf.read(fichier2, dtype='int32')
+
+    nb_canaux = 0
+    nb_canaux2 = 0
 
     print('- Signal: ' + str(signal))
     print('- size: ' + str(signal.size))
     print('- Samplerate: ' + str(samplerate))
     print('- Duree : ' + str(signal.size / samplerate))
 
-    print('- Signal2: ' + str(signal2))
-    print('- size2: ' + str(signal2.size))
-    print('- Samplerate2: ' + str(samplerate2))
+    # Si 1 = 1 canal dans le fichier, si 2 = multi canal.
+    # On travaille qu'en multi canal pour simplifier le processus.
+    if signal.ndim == 1:
+        nb_canaux = 1
+    else:
+        nb_canaux = signal[0].size
 
-    if signal2.size > signal.size:
-        print('OUI : ' + str(signal2.size - signal.size))
-        signal = np.append(signal, np.zeros(signal2.size - signal.size))
-    elif signal2.size < signal.size:
-        print('OUI : ' + str(signal.size - signal2.size))
-        signal2 = np.append(signal2, np.zeros(signal.size - signal2.size))
+    print('- Nombre de canaux : ' + str(nb_canaux))
 
-    print('- size: ' + str(signal.size))
-    print('- size2: ' + str(signal2.size))
-    signal3 = signal - signal2
-    print('- signal3: ' + str(signal3))
+    print()
 
-    difference = np.count_nonzero(signal3 != 0)
-    liste_diff = np.transpose((signal3 != 0).nonzero())
+    print('- Signal2 : ' + str(signal2))
+    print('- size2 : ' + str(signal2.size))
+    print('- Samplerate2 : ' + str(samplerate2))
 
-    liste_diff = liste_diff + start_tc
-    liste_diff = liste_diff // (samplerate/framerate)
+    # Si 1 = 1 canal dans le fichier, si 2 = multi canal.
+    # On travaille qu'en multi canal pour simplifier le processus.
+    if signal2.ndim == 1:
+        nb_canaux2 = 1
+    else:
+        nb_canaux2 = signal[0].size
 
-    print('- difference: ' + str(difference))
-    print('- liste_diff: ' + str(liste_diff))
+    print('- Nombre de canaux2 : ' + str(nb_canaux2))
 
-    f = open('C:/Users/win10dev/Desktop/rapport.txt', 'w+')
+    if nb_canaux != nb_canaux2:
+        print('/!\\ Vous comparé des fichiers contenant pas le même nombre de canaux.')
 
-    last_tc = ''
+    if samplerate != samplerate2:
+        print('/!\\ Vous comparé des fichiers avec des fréquences d\'échantillonnage différents.')
 
-    tc_courant = ''
+    # Traitement si c'est des audios discrets :
+    if nb_canaux == 1:
+        if signal2.size > signal.size:
+            print('OUI : ' + str(signal2.size - signal.size))
+            signal = np.append(signal, np.zeros(signal2.size - signal.size))
+        elif signal2.size < signal.size:
+            print('OUI : ' + str(signal.size - signal2.size))
+            signal2 = np.append(signal2, np.zeros(signal.size - signal2.size))
 
-    for i in range(0, len(liste_diff)):
-        tc_courant = fct.tc_actuel(liste_diff[i][0], '00:00:00:00', framerate)
-        if tc_courant != last_tc:
+        if signal.size != signal2.size:
+            raise Exception('Les deux fichiers ont une durée différente et le programme n\'a pas réussi à compenser.')
+
+        signal3 = signal - signal2
+
+        total = signal3.size
+
+        if signal.size != total:
+            raise Exception('La comparaison n\'a pas la bonne durée.')
+
+        del signal
+        del signal2
+
+        print('- signal3 : ' + str(signal3))
+
+        liste_diff = np.argwhere(signal3 != 0)
+
+        del signal3
+
+        difference = liste_diff.shape[0]
+        liste_diff = liste_diff + start_tc
+        liste_diff = liste_diff // (samplerate/framerate)
+
+        print('Divisé par une absurdé (mais cohérante pour pour le TC) :')
+        print(liste_diff)
+
+        # On ne garde qu'en image :
+        liste_diff = np.unique(liste_diff, axis=0)
+
+        print('- difference : ' + str(difference) + ' echantillon(s)')
+        print('- difference : ' + str(difference / total * 100) + ' %')
+        print('- liste_diff : ' + str(liste_diff))
+
+        f = open('C:/Users/win10dev/Desktop/rapport.txt', 'w+', encoding='utf-8')
+        f.write('Fichier comparé :\n')
+        f.write(' - F1 : ' + fichier + '\n')
+        f.write(' - F2 : ' + fichier2 + '\n')
+
+        last_tc = ''
+        last_tc_num = -1
+
+        tc_courant = ''
+        tc_courant_num = -1
+
+        duree = 0
+
+        f.write(' - Différence :\n')
+        for i in range(0, len(liste_diff)):
+            tc_courant = fct.tc_actuel(liste_diff[i][0], '00:00:00:00', framerate)
+            tc_courant_num = liste_diff[i][0]
+
+            duree = duree + 1
+
+            if tc_courant_num != last_tc_num + duree:
+                if duree != 1:
+                    f.write('-')
+                    f.write(fct.tc_actuel(last_tc_num + (duree - 1), '00:00:00:00', framerate) + '\n')
+                else:
+                    f.write('\n')
+
+                f.write(tc_courant)
+                last_tc = tc_courant
+                last_tc_num = tc_courant_num
+                duree = 0
+
+        if duree != 0:
+            f.write('à')
             f.write(tc_courant + '\n')
-            last_tc = tc_courant
-    f.close()
 
-    # On clôture tous les flux.
-    rapport.close()
+        f.close()
+
+        # On clôture tous les flux.
+        rapport.close()
+    # Traitement si ce sont des audios multi canal :
+    else:
+        if signal2.size > signal.size:
+            print('OUI : ' + str(signal2.size - signal.size))
+            signal = np.append(signal, np.zeros((signal2.size - signal.size, nb_canaux)))
+        elif signal2.size < signal.size:
+            print('OUI : ' + str(signal.size - signal2.size))
+            signal2 = np.append(signal2, np.zeros((signal.size - signal2.size, nb_canaux)))
+
+        if signal.size != signal2.size:
+            raise Exception('Les deux fichiers ont une durée différente et le programme n\'a pas réussi à compenser.')
+
+        signal3 = np.absolute(signal - signal2)
+
+        total = signal3.size
+
+        if signal.size != total:
+            raise Exception('La comparaison n\'a pas la bonne durée.')
+
+        del signal
+        del signal2
+
+        print('- signal3 : ')
+        # print(signal3)
+
+        print('Pas zéro :')
+        liste_diff = np.argwhere(signal3 > 0)
+
+        # liste_diff = np.where(signal3 > 0, 10 * np.log(signal3 / (2147483392)), -144)
+
+        # index = np.where(liste_diff > -30)
+
+        # np.savetxt('C:/Users/win10dev/Desktop/db.txt', signal3[liste_diff][0], fmt="%.4f")
+
+        del signal3
+
+        print('Taille : ' + str(liste_diff.shape[0]))
+
+        difference = liste_diff.shape[0]
+
+        print('Ajout le start TC (en sample) au tableau...')
+        liste_diff = liste_diff + [start_tc, 0]
+        """
+        liste_diff2 = np.zeros((difference, 3), dtype='int32')
+        liste_diff2[:, :-1] = liste_diff + [start_tc, 0]
+        liste_diff2[:, 2] = 10 * np.log(signal3[liste_diff[:, 0], liste_diff[:, 1]] / 2147483392)
+        print(liste_diff2)
+        """
+
+        liste_diff = np.divide(liste_diff, [samplerate / framerate, 1]).astype('int32')
+
+        # del liste_diff2
+
+        print('Transforme le tableau en = (Nombre d\'image, index canal)...')
+        # print(liste_diff)
+
+        # On ne garde qu'en image :
+        print('Rend unique les valeurs du résultat...')
+        print('- liste_diff (size) : ' + str(liste_diff.shape[0]))
+        liste_diff = np.unique(liste_diff, axis=0)
+        # print(liste_diff)
+
+        print('- difference : ' + str(difference) + ' echantillon(s)')
+        print('- difference : ' + str(difference / total * 100) + ' %')
+        # print('- liste_diff : ' + str(liste_diff))
+        print('- liste_diff (size) : ' + str(liste_diff.shape[0]))
+
+        f = open('C:/Users/win10dev/Desktop/rapport.txt', 'w+', encoding='utf-8')
+        f.write('Fichier comparé :\n')
+        f.write(' - F1 : ' + fichier + '\n')
+        f.write(' - F2 : ' + fichier2 + '\n')
+
+        last_tc = ''
+        last_tc_num = -1
+
+        tc_courant = ''
+        tc_courant_num = -1
+
+        canal = []
+
+        duree = 0
+
+        # print('min : ' + str(np.min(liste_diff[:, 2])))
+
+        f.write('\n')
+        f.write(' - Différence :')
+        # j = 0
+        for i in range(0, len(liste_diff)):
+            tc_courant_num = int(liste_diff[i][0])
+            # db_diff = int(liste_diff[i][2])
+            tc_courant = fct.tc_actuel(tc_courant_num, '00:00:00:00', framerate)
+
+            duree = duree + 1
+
+            # print('Durée  ' + str(duree))
+            """
+            if db_diff >= -96:
+                # print('Db : ' + str(db_diff))
+                j = j + 1
+            """
+
+            if tc_courant_num == last_tc_num + duree-1:
+                # print('Même TC donc canal diff.')
+                if liste_diff[i][1]+1 not in canal:
+                    canal.append(liste_diff[i][1]+1)
+                duree = duree - 1
+                # print('m-Durée  ' + str(duree))
+
+            if tc_courant_num != last_tc_num + duree:
+                # print('TC différent, donc add ('+str(tc_courant_num)+'!='+str(last_tc_num)+'+'+str(duree)+').')
+                if duree != 1:
+                    f.write('-')
+                    f.write(fct.tc_actuel(last_tc_num + (duree - 1), '00:00:00:00', framerate))
+                    f.write(' ' + str(canal) + '\n')
+                    canal = []
+                else:
+                    f.write('\n')
+                    canal = []
+
+                f.write(tc_courant)
+                canal.append(liste_diff[i][1]+1)
+                last_tc = tc_courant
+                last_tc_num = tc_courant_num
+                duree = 0
+
+            # print()
+
+        if duree != 0:
+            f.write('-')
+            f.write(tc_courant)
+            f.write(' ' + str(canal) + '\n')
+
+        # print('j : ' + str(j))
+
+        f.close()
+
+        # On clôture tous les flux.
+        rapport.close()
 
 # == END ==
