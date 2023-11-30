@@ -30,9 +30,9 @@ def start_timecode_file(ffmpeg: str, fichier: str) -> str:
 
     command = [ffmpeg, '-i', fichier]
     pipe = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
-    pipe.stdout.readline()
-    pipe.terminate()
     infos = str(pipe.stderr.read())
+    pipe.terminate()
+
     tc = ''
 
     index = infos.find('timecode')
